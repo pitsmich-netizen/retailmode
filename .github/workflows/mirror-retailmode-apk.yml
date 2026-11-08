@@ -1,0 +1,42 @@
+name: Mirror verified Samsung Retail Mode APK to RAW
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-retailmode-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified original APK from GitHub API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p provisioning
+          curl -fLsS --retry 3 --retry-all-errors --retry-delay 3 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/octet-stream" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            'https://api.github.com/repos/pitsmich-netizen/retailmode/releases/assets/718017814' \
+            -o provisioning/RetailMode.apk
+          test "$(stat -c '%s' provisioning/RetailMode.apk)" = "34192143"
+          echo 'da5ede9aa02aa278fa82b97caba8eb2e79a4e6fea9bdc5e3b50ebb3e5bc245c4  provisioning/RetailMode.apk' | sha256sum -c -
+      - name: Commit unchanged, checksummed Retail Mode APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add provisioning/RetailMode.apk
+          if ! git diff --cached --quiet; then
+            git commit -m 'Mirror verified Samsung Retail Mode APK for direct provisioning'
+            git push origin HEAD:main
+          fi
