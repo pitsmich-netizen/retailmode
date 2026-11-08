@@ -111,7 +111,7 @@ final class DpcProgress {
                 .setContentTitle(title + " — pobieranie")
                 .setContentText(message)
                 .setOnlyAlertOnce(true).setOngoing(true)
-                .setCategory(Notification.CATEGORY_PROGRESS).setShowWhen(false);
+                .setCategory(Notification.CATEGORY_STATUS).setShowWhen(false);
             if (percent >= 0) builder.setProgress(100, percent, false);
             else builder.setProgress(0, 0, true);
             nm.notify(id, builder.build());
