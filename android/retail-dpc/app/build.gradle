@@ -60,8 +60,8 @@ android {
         buildConfigField 'String', 'LOCAL_TEST_RETAIL_PASSWORD', '"' + escapeBuildConfig(testRetailPassword) + '"'
         buildConfigField 'String', 'HELPER_URL', '"' + escapeBuildConfig(helperUrl) + '"'
         buildConfigField 'String', 'HELPER_SHA256', '"' + helperSha256 + '"'
-        versionCode 26
-        versionName '0.10.3-ci-retail-raw'
+        versionCode 27
+        versionName '0.10.4-ci-toasts-samsung-a11y'
     }
     buildFeatures {
         buildConfig true

@@ -1,5 +1,13 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.4-ci + Helper 0.2.10: Toasty i ustawienia Dostępności
+
+- Po potwierdzonym przez użytkownika pełnym uruchomieniu Retail Mode na Galaxy S26 w wersji DPC 0.10.3-ci nie zmieniano logiki instalacji ani rejestracji demo.
+- DPC wyświetla ograniczone częstotliwościowo komunikaty Toast także podczas kreatora konfiguracji, bez warunku `user_setup_complete=1`. Powiadomienie pozostaje podstawowym wskaźnikiem, jeśli system blokuje Toasty w tle.
+- Helper próbuje najpierw otworzyć samsungową listę zainstalowanych usług Dostępności przez `com.samsung.accessibility.installed_service`, a gdy nie działa, stosuje dotychczasowe bezpieczne ścieżki i ekran ogólny.
+- Dostępność nadal włącza użytkownik ręcznie. Brak zmian w profilach, haśle demo, handoff, zwalnianiu Device Owner i automatyce Samsung Retail Mode.
+- Wersje testowe: DPC `0.10.4-ci` (`versionCode` 27), Helper `0.2.10` (`versionCode` 16); wymagają testu na S26.
+
 ## 2026-11-08 — DPC 0.10.3-ci: Retail Mode RAW
 
 - Naprawiono pobieranie Samsung Retail Mode: zamiast zawodnego GitHub Releases DPC używa niezmiennej kopii RAW pod commitem `58bed6b59596e1ed82bb2526bbdb202f114a3391`.

@@ -50,7 +50,7 @@ public final class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         TextView title = new TextView(this);
-        title.setText("Retail Helper 0.2.9\nKonfiguracja demo");
+        title.setText("Retail Helper 0.2.10\nKonfiguracja demo");
         title.setTextSize(19);
         layout.addView(title);
         TextView notice = new TextView(this);

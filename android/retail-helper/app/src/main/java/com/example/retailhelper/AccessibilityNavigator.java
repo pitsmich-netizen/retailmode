@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.provider.Settings;
+import android.os.Bundle;
 import android.widget.Toast;
 
 /**
@@ -24,8 +25,26 @@ final class AccessibilityNavigator {
         }
         ComponentName target = new ComponentName(activity, RetailAutomationService.class);
         Toast.makeText(activity,
-            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.9 → Zezwól",
+            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.10 → Zezwól",
             Toast.LENGTH_LONG).show();
+
+        // Samsung-specific installed accessibility services action. This is an
+        // undocumented OEM shortcut, so it must never be the sole path.
+        // The fragment arguments are advisory highlighting only, NOT consent.
+        try {
+            Intent samsung = new Intent("com.samsung.accessibility.installed_service");
+            samsung.setPackage(SETTINGS_PACKAGE);
+            String serviceKey = target.flattenToString();
+            Bundle highlight = new Bundle();
+            highlight.putString(":settings:fragment_args_key", serviceKey);
+            samsung.putExtra(":settings:fragment_args_key", serviceKey);
+            samsung.putExtra(":settings:show_fragment_args", highlight);
+            activity.startActivity(samsung);
+            AutomationState.log(activity, "Nawigacja Dostępność: lista zainstalowanych usług Samsung (OEM)");
+            return;
+        } catch (RuntimeException unavailable) {
+            AutomationState.log(activity, "Skrót Samsung niedostępny: " + unavailable.getClass().getSimpleName());
+        }
 
         // Legacy Samsung/Android Settings activity for installed services.
         // Only attempt it if present, exported and not permission-protected.

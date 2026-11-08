@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.widget.Toast;
 
 /** Progress for the period before Helper is visible. Never reports a stage that has not occurred.
@@ -24,7 +23,7 @@ final class DpcProgress {
     private static final String CHANNEL = "retail_preparation_100";
     private static final int ID = 10200;
     private static final String PREF = "retail_progress_100";
-    private static final long TOAST_GAP_MS = 7500L;
+    private static final long TOAST_GAP_MS = 5500L;
     private DpcProgress() { }
 
     static void preparePermission(Context c) {
@@ -76,15 +75,22 @@ final class DpcProgress {
             }
         } catch (RuntimeException e) { State.log(c, "UI postępu: " + e.getClass().getSimpleName()); }
         try {
-            if (Settings.Secure.getInt(c.getContentResolver(), "user_setup_complete", 0) != 1) return;
+            // Request lightweight toasts even during Android Setup Wizard. On some
+            // OEM builds the OS may suppress background toasts; the ongoing
+            // notification remains the durable indicator in that case.
             long now = SystemClock.elapsedRealtime();
             long last = c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .getLong("toast_at", 0L);
-            if (now - last < TOAST_GAP_MS) return;
+            if (last > 0L && now - last < TOAST_GAP_MS) return;
             c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
                 .putLong("toast_at", now).apply();
-            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(
-                c.getApplicationContext(), message, Toast.LENGTH_LONG).show());
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    Toast.makeText(c.getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                } catch (RuntimeException ex) {
+                    State.log(c, "Toast UI: " + ex.getClass().getSimpleName());
+                }
+            });
         } catch (RuntimeException e) { State.log(c, "Toast: " + e.getClass().getSimpleName()); }
     }
 
