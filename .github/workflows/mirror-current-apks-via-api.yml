@@ -1,0 +1,49 @@
+name: Mirror current DPC and Helper APKs via GitHub API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-current-apks-via-api.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download original APKs via authenticated GitHub assets API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p provisioning
+          curl -fLsS --retry 2 --retry-all-errors --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/octet-stream" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/pitsmich-netizen/retailmode/releases/assets/723444813" \
+            -o provisioning/RetailHelper-029.apk
+          echo '5382663fd48cd77ee805bb4ad272ebcd8e8ddc1ef1e978a1f40dc7cf59351220  provisioning/RetailHelper-029.apk' | sha256sum -c -
+          curl -fLsS --retry 2 --retry-all-errors --retry-delay 2 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/octet-stream" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/pitsmich-netizen/retailmode/releases/assets/723459326" \
+            -o provisioning/RetailDcp-100.apk
+          echo '330f237fc5243b32d6e26cdc2d1666164106332512a1e6910638f563c7878b9b  provisioning/RetailDcp-100.apk' | sha256sum -c -
+      - name: Commit only if checksums match
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add provisioning/RetailHelper-029.apk provisioning/RetailDcp-100.apk
+          if ! git diff --cached --quiet; then
+            git commit -m "Mirror verified Helper 0.2.9 and DPC 0.10.0 APKs"
+            git push origin HEAD:main
+          fi
