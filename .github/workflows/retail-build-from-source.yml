@@ -133,7 +133,7 @@ jobs:
             exit 1
           }
           echo "Matching Android signing certificate: $D"
-          sha256sum "$HELPER_APK" "$DPC_APK" > output/SHA256SUMS.txt
+          echo 'Both APK signatures verified and matched.'
 
       - name: Commit immutable DPC and release manifest
         shell: bash
@@ -146,6 +146,7 @@ jobs:
           echo "DPC_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${DPC_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" >> "$GITHUB_ENV"
           cp "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" output/RetailHelper.apk
           cp "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" output/RetailDcp.apk
+          (cd output && sha256sum RetailDcp.apk RetailHelper.apk > SHA256SUMS.txt)
 
       - name: Publish auto-generated test prerelease
         env:
