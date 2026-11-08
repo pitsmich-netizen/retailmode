@@ -19,7 +19,7 @@ public final class MainActivity extends Activity {
     private CheckBox autoPassword;
     private TextView technicalStatus;
     private LinearLayout advanced;
-    private Button advancedToggle;
+    private Button advancedToggle, primaryAction;
     private final android.os.Handler handoffHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private int handoffPolls = 0;
     private final Runnable handoffPoll = new Runnable() {
@@ -28,12 +28,9 @@ public final class MainActivity extends Activity {
             if (HandoffBridge.released(MainActivity.this)) {
                 HandoffBridge.launchSystemUninstall(MainActivity.this);
                 refresh();
-                if (HandoffBridge.waitingForSilentProbe(MainActivity.this) && handoffPolls++ < 30) {
-                    handoffHandler.postDelayed(this, 800);
-                }
                 return;
             }
-            if (HandoffBridge.hasSession(MainActivity.this) && handoffPolls++ < 30) {
+            if (HandoffBridge.hasSession(MainActivity.this) && handoffPolls++ < 180) {
                 HandoffBridge.confirmForeground(MainActivity.this);
                 handoffHandler.postDelayed(this, 800);
             }
@@ -50,7 +47,7 @@ public final class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         TextView title = new TextView(this);
-        title.setText("Retail Helper 0.2.13\nKonfiguracja demo");
+        title.setText("Retail Helper 0.2.14\nKonfiguracja demo");
         title.setTextSize(19);
         layout.addView(title);
         TextView notice = new TextView(this);
@@ -101,7 +98,17 @@ public final class MainActivity extends Activity {
             layout.addView(qrInfo);
         }
 
-        add(layout, "ROZPOCZNIJ DEMO", this::confirmAndStart);
+        primaryAction = new Button(this);
+        primaryAction.setText("ROZPOCZNIJ DEMO");
+        primaryAction.setOnClickListener(v -> {
+            if (HandoffBridge.wrapperInstalled(this)) {
+                if (HandoffBridge.released(this)) HandoffBridge.retrySystemUninstall(this);
+                else Toast.makeText(this, "Czekam na zwolnienie Wrappera", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            confirmAndStart();
+        });
+        layout.addView(primaryAction);
         status = new TextView(this);
         status.setTextSize(16);
         layout.addView(status);
@@ -186,6 +193,10 @@ public final class MainActivity extends Activity {
     }
 
     private void confirmAndStart() {
+        if (HandoffBridge.wrapperInstalled(this)) {
+            Toast.makeText(this, "Najpierw potwierdź usunięcie Wrappera", Toast.LENGTH_LONG).show();
+            return;
+        }
         if (!saveModel()) return;
         String site = siteInput.getText().toString().trim();
         if (!site.matches("[A-Za-z0-9_-]{4,40}")) {
@@ -306,6 +317,13 @@ public final class MainActivity extends Activity {
             "Pobieranie demo rozpoczęte. Dostępność wyłączona; ikona Helpera ukryta." :
             PendingStart.armed(this) ? "Oczekuję na włączenie Dostępności" :
             AutomationState.active(this) ? "Trwa konfiguracja demo" : "Gotowy do rozpoczęcia";
+        if (primaryAction != null) {
+            boolean installed = HandoffBridge.wrapperInstalled(this);
+            boolean released = HandoffBridge.released(this);
+            primaryAction.setText(!installed ? "ROZPOCZNIJ DEMO"
+                : released ? "POTWIERDŹ USUNIĘCIE DPC" : "CZEKAJ — ZWALNIAM DPC");
+            primaryAction.setEnabled(!installed || released);
+        }
         status.setText("\nDostępność: " + accessibility + "\n" + process +
             (AutomationState.active(this) ? "\n" + AutomationState.info(this) : ""));
         technicalStatus.setText("\nModel: " + AutomationState.profileModel(this) +

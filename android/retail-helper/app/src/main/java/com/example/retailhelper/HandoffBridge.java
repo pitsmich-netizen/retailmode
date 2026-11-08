@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -70,6 +71,17 @@ final class HandoffBridge {
             "DPC nie został w pełni zwolniony; nie rozpoczynam deinstalacji");
     }
     static boolean released(Context c) { return hasSession(c) && p(c).getBoolean("released", false); }
+    static boolean wrapperInstalled(Context c) {
+        try {
+            c.getPackageManager().getPackageInfo(DPC, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException missing) {
+            return false;
+        } catch (RuntimeException uncertain) {
+            AutomationState.log(c, "Nie mogę sprawdzić obecności DPC — bezpiecznie blokuję START");
+            return true;
+        }
+    }
     static boolean waitingForSilentProbe(Context c) {
         long until = p(c).getLong("probe_until_elapsed", 0L);
         return released(c) && until > SystemClock.elapsedRealtime();
@@ -87,7 +99,7 @@ final class HandoffBridge {
     static void launchSystemUninstall(Activity a) {
         if (!released(a) || p(a).getBoolean("uninstall_requested", false)) return;
         if (waitingForSilentProbe(a)) return; // Give PackageInstaller time; no competing UI.
-        if (a.getPackageManager().getLaunchIntentForPackage(DPC) == null) {
+        if (!wrapperInstalled(a)) {
             // DPC might already have been uninstalled; don't open the package manager again.
             p(a).edit().putBoolean("uninstall_requested", true).apply();
             return;
@@ -102,9 +114,17 @@ final class HandoffBridge {
             Toast.makeText(a, "Nie można otworzyć deinstalatora; usuń Retail DPC w Ustawieniach", Toast.LENGTH_LONG).show();
         }
     }
+    /** Retry only after an explicit user tap, to avoid looping consent dialogs. */
+    static void retrySystemUninstall(Activity a) {
+        if (!released(a) || !wrapperInstalled(a)) return;
+        p(a).edit().putBoolean("uninstall_requested", false).commit();
+        launchSystemUninstall(a);
+    }
     static String status(Context c) {
-        if (!hasSession(c)) return "brak przekazania";
-        if (released(c)) return "Device Owner zwolniony";
-        return "oczekuję na potwierdzenie zwolnienia DPC";
+        if (released(c)) return wrapperInstalled(c)
+            ? "Device Owner zwolniony; potwierdź usunięcie DPC"
+            : "DPC usunięty; gotowe do uruchomienia demo";
+        if (hasSession(c)) return "oczekuję na zwolnienie DPC";
+        return wrapperInstalled(c) ? "DPC nadal zainstalowany" : "brak aktywnego Wrappera";
     }
 }

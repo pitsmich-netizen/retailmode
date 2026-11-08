@@ -1,5 +1,15 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.8-ci + Helper 0.2.14: szybkie retry, pasek, potwierdzenie usunięcia
+
+- Retail Mode APK: maksymalnie 3 lokalne próby pobrania przy przejściowych błędach I/O lub HTTP 408/429/5xx, z przerwami 3 s i 8 s. Po ich wyczerpaniu nadal pozostaje JobScheduler, bez utraty sprawdzania SHA-256.
+- Oddzielne powiadomienia postępu Retail Mode i Retail Helper (dwa niezależne ID, ograniczone aktualizacje) eliminują problem odrzucania postępu jednego APK przez stan drugiego pobierania. Sprawdzanie uprawnień powiadomień wykonywane już w callbackach DO.
+- Po zwolnieniu Device Owner DPC nie wykonuje eksperymentalnej próby cichej deinstalacji i nie odczekuje 9 sekund. Helper od razu próbuje otworzyć systemowe okno potwierdzenia.
+- Przed potwierdzonym usunięciem DPC główny START Helpera jest zablokowany: użytkownik nie może uciec do Retail Mode zanim zobaczy wymagane okno. W razie anulowania przycisk pozwala ponowić usuwanie bez resetu.
+- Pakiet DPC wykrywany jest przez PackageManager.getPackageInfo, a nie obecność aktywności LAUNCHER. Zgoda usunięcia pozostaje świadoma i ręczna.
+- Nie zmieniano konfiguracji Wi-Fi, hasła Retail Mode w QR, automatyzacji formularzy Samsung Retail Mode ani wyłączania Accessibility.
+- Kompilacja nie potwierdza jeszcze zachowania na fizycznym Galaxy S26; nowy build eksperymentalny.
+
 ## 2026-11-08 — DPC 0.10.7-ci + Helper 0.2.13: hasło Retail Mode w lokalnym QR
 
 - QR może przekazać opcjonalną wartość `retail_password` w `PROVISIONING_ADMIN_EXTRAS_BUNDLE`; **nie** ma hasła w publicznym kodzie GitHub ani w kompilowanym APK.

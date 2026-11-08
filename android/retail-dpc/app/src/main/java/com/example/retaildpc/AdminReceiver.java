@@ -9,6 +9,7 @@ import android.os.PersistableBundle;
 public final class AdminReceiver extends DeviceAdminReceiver {
     @Override public void onEnabled(Context context, Intent intent) {
         State.log(context, "Device admin aktywowany");
+        DpcProgress.preparePermission(context);
         Scheduler.schedule(context);
         HandoffScheduler.schedule(context);
     }
@@ -23,6 +24,7 @@ public final class AdminReceiver extends DeviceAdminReceiver {
         }
         State.log(context, "Zakończono provisioning (callback)");
         InitialDeviceSetup.enableLocation(context);
+        DpcProgress.preparePermission(context);
         Scheduler.schedule(context);
         HandoffScheduler.schedule(context);
     }

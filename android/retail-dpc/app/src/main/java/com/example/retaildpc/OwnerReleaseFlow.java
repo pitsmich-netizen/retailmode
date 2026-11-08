@@ -67,8 +67,9 @@ final class OwnerReleaseFlow {
         // and explicitly ACKs it BEFORE our PackageInstaller request can remove us.
         // Otherwise a successful uninstall kills the sender before the Helper learns
         // that Device Owner was relinquished (bug in experimental 0.9.7).
-        boolean probePlanned = released && !handoff.getBoolean(
-            SilentSelfUninstallProbe.PREF_PREFIX + "started", false);
+        // Tested Galaxy S26 needs user consent for package removal.
+        // Do not wait 9s for a silent probe while Helper moves into Retail Mode.
+        boolean probePlanned = false;
         Intent result = new Intent(RELEASE_RESULT);
         result.setClassName(Constants.HELPER_PACKAGE, Constants.HELPER_PACKAGE + ".DpcReleaseReceiver");
         result.putExtra(HelperHandoff.EXTRA_NONCE, nonce);

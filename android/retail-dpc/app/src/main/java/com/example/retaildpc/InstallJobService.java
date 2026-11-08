@@ -15,6 +15,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.io.IOException;
+import android.os.SystemClock;
 import java.security.MessageDigest;
 import java.util.Locale;
 
@@ -34,10 +36,9 @@ public final class InstallJobService extends JobService {
                 } else if (State.installed(this)) {
                     State.log(this, "Demo już zainstalowane – pomijam");
                 } else {
-                    DpcProgress.stage(this, "retail_downloading", "Pobieram Samsung Retail Mode…");
-                    State.log(this, "Pobieram demo: " + Constants.DEMO_URL);
+                    DpcProgress.preparePermission(this);
                     File file = new File(getCacheDir(), "RetailMode-test.apk");
-                    downloadAndVerify(file);
+                    downloadWithFastRetry(file);
                     if (!cancelled) {
                         DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
                         install(file);
@@ -60,6 +61,32 @@ public final class InstallJobService extends JobService {
         return true;
     }
 
+    /** Up to 3 local attempts; system JobScheduler remains the fallback. */
+    private void downloadWithFastRetry(File target) throws Exception {
+        final long[] backoffsMs = {0L, 3000L, 8000L};
+        for (int attempt = 1; attempt <= backoffsMs.length; attempt++) {
+            if (cancelled || CleanupFlow.blocked(this)) return;
+            if (attempt > 1) {
+                DpcProgress.stage(this, "retail_retry_" + attempt,
+                    "Próba " + attempt + "/3 — ponawiam Retail Mode…");
+                SystemClock.sleep(backoffsMs[attempt - 1]);
+                if (cancelled || CleanupFlow.blocked(this)) return;
+            }
+            target.delete();
+            DpcProgress.stage(this, "retail_downloading_" + attempt,
+                "Pobieram Retail Mode (próba " + attempt + "/3)…");
+            try {
+                downloadAndVerify(target);
+                return;
+            } catch (IOException e) {
+                target.delete();
+                State.log(this, "Retail: nieudane pobieranie " + attempt
+                    + "/3: " + e.getClass().getSimpleName() + " " + e.getMessage());
+                if (cancelled || attempt == backoffsMs.length) throw e;
+            }
+        }
+    }
+
     private void downloadAndVerify(File target) throws Exception {
         URL next = new URL(Constants.DEMO_URL);
         HttpURLConnection conn = null;
@@ -79,7 +106,11 @@ public final class InstallJobService extends JobService {
                 conn.disconnect();
                 continue;
             }
-            if (code != 200) throw new IllegalStateException("HTTP " + code);
+            if (code != 200) {
+                if (code == 408 || code == 429 || code >= 500)
+                    throw new IOException("HTTP " + code);
+                throw new IllegalStateException("HTTP " + code);
+            }
             break;
         }
         if (conn == null || conn.getResponseCode() != 200)
