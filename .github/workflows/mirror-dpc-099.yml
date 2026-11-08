@@ -1,0 +1,37 @@
+name: Mirror DPC 0.9.9 APK for QR provisioning
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-dpc-099.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Fetch and SHA-256 verify existing release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p provisioning
+          curl -fL --retry 5 --retry-all-errors --retry-delay 3 \
+            'https://github.com/pitsmich-netizen/retailmode/releases/download/dcp-099-test/RetailDcp.apk' \
+            -o provisioning/RetailDcp-099.apk
+          echo '7aa63955b3dc68a045b38f65dee7dd3f3a8c628b60b4168b328f6cea917f80ff  provisioning/RetailDcp-099.apk' | sha256sum -c -
+      - name: Commit verified binary to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add provisioning/RetailDcp-099.apk
+          if ! git diff --cached --quiet; then
+            git commit -m 'Mirror verified DPC 0.9.9 APK for QR diagnosis'
+            git push origin HEAD:main
+          fi
