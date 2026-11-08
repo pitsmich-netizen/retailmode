@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Retail Helper 0.2.10: logika 0.7.1, wybór Experience, potem osobny CONFIRM.
+ * Retail Helper 0.2.11: logika 0.7.1, wybór Experience, potem osobny CONFIRM.
  * Tryb pełny wymaga świadomej zgody. Nie obsługuje obchodzenia blokady embargo.
  * Działa wyłącznie na określonym pakiecie i tylko po włączeniu przez użytkownika.
  */
@@ -57,7 +57,7 @@ public final class RetailAutomationService extends AccessibilityService {
     @Override protected void onServiceConnected() {
         connected = true;
         liveInstance = this;
-        AutomationState.log(this, "Usługa Accessibility 0.2.10 podłączona");
+        AutomationState.log(this, "Usługa Accessibility 0.2.11 podłączona");
         handler.removeCallbacks(tick);
         // User explicitly pressed START before granting Accessibility. Do not
         // silently start registration merely because the service was enabled.

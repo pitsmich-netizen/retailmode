@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.5-ci + Helper 0.2.11: nawigacja Samsung Accessibility
+
+- Użytkownik potwierdził sukces Retail Mode i 5/6 kontroli na S26 dla DPC 0.10.4-ci + Helper 0.2.10; bezpośredni skrót Accessibility nadal przenosił do strony ogólnej.
+- Helper najpierw sprawdza obsługę Samsungowego intentu `com.samsung.accessibility.installed_service` bez wymuszania pakietu `com.android.settings`.
+- Aby uniknąć przechwycenia, uruchamia tylko eksportowane aktywności oznaczone jako systemowe, bez wymaganych niedostępnych uprawnień.
+- Dodano widoczność intentu w `<queries>` i diagnostykę nawigacji. Jeśli ekran Samsung nie jest dostępny, zachowano poprzednie ścieżki i ogólną Dostępność.
+- Nie zmieniano aktywacji Retail Mode, handoff, zachowania Device Owner, usług Accessibility ani Toastów DPC.
+- Uwaga: niepubliczny skrót Samsunga wymaga osobnego testu na S26; Android nie gwarantuje bezpośredniego ekranu.
+
 ## 2026-11-08 — DPC 0.10.4-ci + Helper 0.2.10: Toasty i ustawienia Dostępności
 
 - Po potwierdzonym przez użytkownika pełnym uruchomieniu Retail Mode na Galaxy S26 w wersji DPC 0.10.3-ci nie zmieniano logiki instalacji ani rejestracji demo.

@@ -23,7 +23,7 @@
     </queries>
     <application
         android:allowBackup="false"
-        android:label="Retail DPC LAB 0.10.4"
+        android:label="Retail DPC LAB 0.10.5"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false">
         <receiver android:name=".SelfUninstallResultReceiver" android:exported="false" />
@@ -67,7 +67,7 @@
         </receiver>
         <service
             android:name=".RetailAutomationService"
-            android:label="Retail DPC LAB 0.10.4 - automatyzacja"
+            android:label="Retail DPC LAB 0.10.5 - automatyzacja"
             android:description="@string/accessibility_description"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">

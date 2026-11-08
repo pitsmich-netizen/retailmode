@@ -5,6 +5,9 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.ResolveInfo;
+import java.util.List;
 import android.provider.Settings;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -25,26 +28,14 @@ final class AccessibilityNavigator {
         }
         ComponentName target = new ComponentName(activity, RetailAutomationService.class);
         Toast.makeText(activity,
-            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.10 → Zezwól",
+            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.11 → Zezwól",
             Toast.LENGTH_LONG).show();
 
-        // Samsung-specific installed accessibility services action. This is an
-        // undocumented OEM shortcut, so it must never be the sole path.
-        // The fragment arguments are advisory highlighting only, NOT consent.
-        try {
-            Intent samsung = new Intent("com.samsung.accessibility.installed_service");
-            samsung.setPackage(SETTINGS_PACKAGE);
-            String serviceKey = target.flattenToString();
-            Bundle highlight = new Bundle();
-            highlight.putString(":settings:fragment_args_key", serviceKey);
-            samsung.putExtra(":settings:fragment_args_key", serviceKey);
-            samsung.putExtra(":settings:show_fragment_args", highlight);
-            activity.startActivity(samsung);
-            AutomationState.log(activity, "Nawigacja Dostępność: lista zainstalowanych usług Samsung (OEM)");
-            return;
-        } catch (RuntimeException unavailable) {
-            AutomationState.log(activity, "Skrót Samsung niedostępny: " + unavailable.getClass().getSimpleName());
-        }
+        // Best-effort Samsung-specific entry point. Do NOT pin this action to
+        // com.android.settings: on some One UI builds another system component
+        // owns the intent filter. Resolve only exported SYSTEM activities and
+        // launch explicitly to avoid accidental third-party interception.
+        if (openSamsungInstalledServices(activity, target)) return;
 
         // Legacy Samsung/Android Settings activity for installed services.
         // Only attempt it if present, exported and not permission-protected.
@@ -92,6 +83,47 @@ final class AccessibilityNavigator {
             Toast.makeText(activity, "Otwórz Ustawienia → Dostępność → Zainstalowane aplikacje",
                 Toast.LENGTH_LONG).show();
         }
+    }
+
+
+    private static boolean openSamsungInstalledServices(Activity activity, ComponentName service) {
+        final String action = "com.samsung.accessibility.installed_service";
+        final PackageManager pm = activity.getPackageManager();
+        List<ResolveInfo> matches;
+        try {
+            matches = pm.queryIntentActivities(new Intent(action), PackageManager.MATCH_DEFAULT_ONLY);
+        } catch (RuntimeException ex) {
+            AutomationState.log(activity, "Skrót Samsung: błąd zapytania " + ex.getClass().getSimpleName());
+            return false;
+        }
+        if (matches == null || matches.isEmpty()) {
+            AutomationState.log(activity, "Skrót Samsung: brak publicznie dostępnego ekranu OEM");
+            return false;
+        }
+        for (ResolveInfo match : matches) {
+            ActivityInfo info = match.activityInfo;
+            if (info == null || !info.exported || info.applicationInfo == null) continue;
+            int flags = info.applicationInfo.flags;
+            if ((flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) == 0)
+                continue;
+            if (info.permission != null &&
+                    activity.checkSelfPermission(info.permission) != PackageManager.PERMISSION_GRANTED)
+                continue;
+            try {
+                Intent samsung = new Intent(action).setClassName(info.packageName, info.name);
+                String serviceKey = service.flattenToString();
+                Bundle highlight = new Bundle();
+                highlight.putString(":settings:fragment_args_key", serviceKey);
+                samsung.putExtra(":settings:fragment_args_key", serviceKey);
+                samsung.putExtra(":settings:show_fragment_args", highlight);
+                activity.startActivity(samsung);
+                AutomationState.log(activity, "Skrót Samsung uruchomiony: " + info.packageName + "/" + info.name);
+                return true;
+            } catch (RuntimeException ex) {
+                AutomationState.log(activity, "Skrót Samsung odmówiony: " + ex.getClass().getSimpleName());
+            }
+        }
+        return false;
     }
 
     private static boolean openExportedInstalledServicesScreen(Activity activity, ComponentName service) {
