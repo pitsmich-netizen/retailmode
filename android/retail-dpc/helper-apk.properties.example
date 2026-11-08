@@ -1,0 +1,3 @@
+# Example source override; keep same verified SHA-256.
+helper.url=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/main/provisioning/RetailHelper-029.apk
+helper.sha256=5382663fd48cd77ee805bb4ad272ebcd8e8ddc1ef1e978a1f40dc7cf59351220

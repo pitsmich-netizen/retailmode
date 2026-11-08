@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_description">Testowa usługa automatyzacji: wybiera kraj, partnera i sklep w Samsung Retail Mode. Nie wpisuje haseł, nie zatwierdza aktywacji i nie zbiera danych innych aplikacji.</string>
+</resources>

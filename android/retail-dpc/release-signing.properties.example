@@ -1,0 +1,6 @@
+# Copy as release-signing.properties; keep OUTSIDE Git and never share.
+# Use a private directory for the actual JKS. Use forward slashes on Windows.
+storeFile=C:/Users/USERNAME/retail-signing/retail-dpc-release.jks
+storePassword=ENTER_LOCALLY
+keyAlias=retail-dpc
+keyPassword=ENTER_LOCALLY

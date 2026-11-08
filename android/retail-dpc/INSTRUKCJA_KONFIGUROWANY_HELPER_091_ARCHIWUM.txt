@@ -1,0 +1,8 @@
+WRAPPER 0.9.1 + HELPER 0.1 KONFIGURACJA
+URL Helper APK i SHA-256 sa ustawione w helper-apk.properties.
+Nie zmieniaj ich bez przeliczenia hash, jesli zmienisz APK.
+1. Rozpakuj, otworz projekt w Android Studio.
+2. Wybierz debug i Build > Build APK(s). Nie Generate Signed Release.
+3. Policz SHA NOWEGO app-debug.apk dla Wrappera 0.9.1 i opublikuj jako RetailDcp.apk w osobnym Release.
+4. Uaktualnij QR nowym URL i SHA DPC. Nie resetuj telefonu, zanim zweryfikujesz konfiguracje.
+5. To kod LAB. Skladnia ZIP i wlasciwosci sprawdzone statycznie. Kompilacja i test na S26 wymagane.

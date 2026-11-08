@@ -1,0 +1,21 @@
+.gradle/
+.idea/
+local.properties
+**/build/
+*.iml
+*.jks
+*.keystore
+*.apk
+!tools/example_wifi_qr.png
+provisioning.json
+provisioning.png
+
+# NEVER commit the local Retail Mode configuration secret
+retail-test-secret.properties
+
+# Release signing secrets
+release-signing.properties
+release*.jks
+
+# Konfiguracja publicznego pliku Helper APK — nie jest sekretem, ale lokalna dla LAB
+helper-apk.properties

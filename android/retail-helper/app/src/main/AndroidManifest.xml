@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="com.example.retaildpc.permission.HANDOFF_ACK" />
+    <!-- Needed for the existing DPC uninstall prompt; Helper itself is NEVER uninstalled. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <queries><package android:name="com.android.settings" /><package android:name="com.samsung.rms.retailagent.global" /><package android:name="com.example.retaildpc" /></queries>
+    <application android:label="Retail Helper 0.2.9" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:allowBackup="false">
+        <receiver android:name=".DpcReleaseReceiver"
+            android:exported="true"
+            android:permission="com.example.retaildpc.permission.HANDOFF_ACK" />
+        <!-- MainActivity stays enabled for DPC's explicit handoff after hiding the icon. -->
+        <activity android:name=".MainActivity" android:exported="true" />
+        <!-- This alias is DISABLED BY DEFAULT, not just disabled at runtime.
+             Android 10+ can inject a synthetic App Info icon for apps whose
+             launcher component was enabled by default then later disabled.
+             DPC opens MainActivity explicitly; no app drawer icon is needed. -->
+        <activity-alias android:name=".LauncherActivity" android:targetActivity=".MainActivity"
+            android:exported="true" android:enabled="false" android:label="Retail Helper 0.2.9">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <service android:name=".RetailAutomationService" android:label="Retail Helper 0.2.9 — Accessibility"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/retail_accessibility"/>
+        </service>
+    </application>
+</manifest>
