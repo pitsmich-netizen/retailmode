@@ -7,8 +7,8 @@ android {
         applicationId = "com.example.retailhelper"
         minSdk = 29
         targetSdk = 35
-        versionCode = 17
-        versionName = "0.2.11"
+        versionCode = 18
+        versionName = "0.2.12"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

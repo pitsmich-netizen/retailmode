@@ -38,7 +38,10 @@ public final class HelperInstallJobService extends JobService {
                     DpcProgress.stage(this, "helper_downloading", "Pobieram Retail Helper…");
                     State.log(this, "Pobieram Helper APK z " + HelperConfig.url(this));
                     downloadAndVerify(target);
-                    if (!cancelled && !CleanupFlow.blocked(this)) install(target);
+                    if (!cancelled && !CleanupFlow.blocked(this)) {
+                        DpcProgress.stage(this, "helper_installing", "Instaluję Retail Helper…");
+                        install(target);
+                    }
                 }
             } catch (Exception e) {
                 State.log(this, "BŁĄD Helper APK: " + e.getClass().getSimpleName() + " " + e.getMessage());
@@ -83,6 +86,8 @@ public final class HelperInstallJobService extends JobService {
             throw new IllegalStateException("Za dużo przekierowań Helper APK");
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         long count = 0;
+        long expected = conn.getContentLengthLong();
+        DpcProgress.downloadProgress(this, "helper_downloading", "Retail Helper", 0L, expected);
         try (InputStream in = conn.getInputStream(); OutputStream out = new FileOutputStream(target)) {
             byte[] buffer = new byte[65536];
             int n;
@@ -91,9 +96,12 @@ public final class HelperInstallJobService extends JobService {
                 if (count > 30L * 1024L * 1024L) throw new IllegalStateException("Helper APK jest za duży");
                 sha.update(buffer, 0, n);
                 out.write(buffer, 0, n);
+                DpcProgress.downloadProgress(this, "helper_downloading",
+                    "Retail Helper", count, expected);
             }
         } finally { conn.disconnect(); }
         if (cancelled) throw new IllegalStateException("Przerwano pobieranie Helpera");
+        DpcProgress.stage(this, "helper_verifying", "Sprawdzam SHA-256 Helpera…");
         StringBuilder hex = new StringBuilder();
         for (byte b : sha.digest()) hex.append(String.format(Locale.ROOT,"%02x", b & 0xff));
         if (!HelperConfig.sha256(this).equalsIgnoreCase(hex.toString())) {

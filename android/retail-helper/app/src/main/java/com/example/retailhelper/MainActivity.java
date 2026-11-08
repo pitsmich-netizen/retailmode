@@ -1,7 +1,6 @@
 package com.example.retailhelper;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.content.Intent;
 import android.content.ComponentName;
@@ -50,7 +49,7 @@ public final class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         TextView title = new TextView(this);
-        title.setText("Retail Helper 0.2.11\nKonfiguracja demo");
+        title.setText("Retail Helper 0.2.12\nKonfiguracja demo");
         title.setTextSize(19);
         layout.addView(title);
         TextView notice = new TextView(this);
@@ -173,15 +172,9 @@ public final class MainActivity extends Activity {
             Toast.makeText(this, "Wpisz hasło lub wyłącz automatyczne hasło", Toast.LENGTH_LONG).show();
             return;
         }
-        new AlertDialog.Builder(this)
-            .setTitle("Uruchomić konfigurację demo?")
-            .setMessage("Użyj tylko na urządzeniu, na którym masz prawo aktywować Retail Mode. " +
-                (autoPassword.isChecked() ? "Helper spróbuje wpisać hasło i kliknąć CONFIRM na ekranie hasła. " :
-                    "Wpiszesz i zatwierdzisz hasło ręcznie. ") +
-                "Helper wybierze właściwy profil Experience i zatwierdzi go osobnym CONFIRM.")
-            .setNegativeButton("Anuluj", (d, w) -> {})
-            .setPositiveButton("START", (d, w) -> begin(site, autoPassword.isChecked()))
-            .show();
+        // A deliberate tap on ROZPOCZNIJ DEMO is sufficient authorization.
+        // Android's own Accessibility consent and DPC uninstall prompt remain manual.
+        begin(site, autoPassword.isChecked());
     }
     private void begin(String site, boolean full) {
         CompletionHider.resetForExplicitStart(this); // Explicit restart clears marker and restores the icon.

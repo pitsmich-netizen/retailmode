@@ -28,7 +28,7 @@ final class AccessibilityNavigator {
         }
         ComponentName target = new ComponentName(activity, RetailAutomationService.class);
         Toast.makeText(activity,
-            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.11 → Zezwól",
+            "Włącz: Zainstalowane aplikacje → Retail Helper 0.2.12 → Zezwól",
             Toast.LENGTH_LONG).show();
 
         // Best-effort Samsung-specific entry point. Do NOT pin this action to

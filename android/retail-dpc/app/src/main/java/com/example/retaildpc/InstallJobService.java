@@ -38,7 +38,10 @@ public final class InstallJobService extends JobService {
                     State.log(this, "Pobieram demo: " + Constants.DEMO_URL);
                     File file = new File(getCacheDir(), "RetailMode-test.apk");
                     downloadAndVerify(file);
-                    if (!cancelled) install(file);
+                    if (!cancelled) {
+                        DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
+                        install(file);
+                    }
                 }
             } catch (Exception e) {
                 State.log(this, "BŁĄD pobrania/instalacji: " + e.getClass().getSimpleName()
@@ -83,6 +86,10 @@ public final class InstallJobService extends JobService {
             throw new IllegalStateException("Zbyt wiele przekierowań");
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         long count = 0;
+        long expected = conn.getContentLengthLong();
+        // The pinned, SHA-256-verified original is exactly 34,192,143 bytes.
+        if (expected <= 0L) expected = 34192143L;
+        DpcProgress.downloadProgress(this, "retail_downloading", "Retail Mode", 0L, expected);
         try (InputStream input = conn.getInputStream();
              OutputStream output = new FileOutputStream(target)) {
             byte[] buffer = new byte[65536];
@@ -93,11 +100,14 @@ public final class InstallJobService extends JobService {
                     throw new IllegalStateException("APK za duże");
                 sha.update(buffer, 0, n);
                 output.write(buffer, 0, n);
+                DpcProgress.downloadProgress(this, "retail_downloading",
+                    "Retail Mode", count, expected);
             }
         } finally {
             conn.disconnect();
         }
         if (cancelled) throw new IllegalStateException("Przerwano przez system");
+        DpcProgress.stage(this, "retail_verifying", "Sprawdzam SHA-256 Retail Mode…");
         StringBuilder hex = new StringBuilder();
         for (byte b : sha.digest()) hex.append(String.format(Locale.ROOT, "%02x", b & 0xff));
         if (!Constants.DEMO_SHA256.equalsIgnoreCase(hex.toString())) {

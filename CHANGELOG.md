@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.6-ci + Helper 0.2.12: rzeczywisty postęp i mniej kliknięć
+
+- Powiadomienie DPC pokazuje rzeczywiste bajty pobrane przez połączenie HTTPS; procent i pasek są widoczne tylko dla znanego rozmiaru. To NIE jest fikcyjny pasek postępu instalacji.
+- Odświeżanie postępu jest ograniczone do ok. 1,6 s, aby nie obciążać UI. Etapy: pobieranie, sprawdzanie SHA-256, instalacja; bez zmiany pinów APK i certyfikatów.
+- Toasty DPC pokazują wyłącznie najnowszy etap; poprzednie oczekujące komunikaty są anulowane, a wyświetlanie jest ograniczone do 1/4,5 s. Android może je dodatkowo opóźniać w tle.
+- Helper wykonuje konfigurację po jednym świadomym kliknięciu ROZPOCZNIJ DEMO zamiast wymagać kolejnego potwierdzenia w oknie dialogowym. Zgoda na Dostępność i potwierdzenie usunięcia DPC pozostają ręczne.
+- Logika automatycznej rejestracji Retail Mode, przekazanie sterowania, usuwanie DPC oraz nawigacja OEM Dostępności bez zmian.
+- Wersje testowe: DPC 0.10.6-ci (versionCode 29), Helper 0.2.12 (versionCode 18); nieprzetestowane jeszcze na S26.
+
 ## 2026-11-08 — DPC 0.10.5-ci + Helper 0.2.11: nawigacja Samsung Accessibility
 
 - Użytkownik potwierdził sukces Retail Mode i 5/6 kontroli na S26 dla DPC 0.10.4-ci + Helper 0.2.10; bezpośredni skrót Accessibility nadal przenosił do strony ogólnej.
