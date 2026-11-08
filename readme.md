@@ -13,7 +13,9 @@ Projekt: **DPC Wrapper → Retail Helper → Samsung Retail Mode**, uruchamiany 
 
 Jedyny aktywny pipeline Android: [Build and publish Retail test APKs from sources](.github/workflows/retail-build-from-source.yml). Po zmianie źródeł automatycznie przygotowuje parę APK, przypina SHA-256 Helpera w DPC i publikuje **testowe** wydanie GitHub Releases z `DEPLOYMENT.txt` oraz linkami RAW.
 
-Pierwszy test samej automatycznej publikacji istniejących APK zakończył się powodzeniem: [ci-smoke-20261108](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-smoke-20261108). Nie jest on dowodem działania nowego buildu na telefonie.
+**Automatyczna kompilacja i publikacja źródłowa zakończyła się sukcesem** w testach [ci-build-42474697059](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-build-42474697059) i [ci-build-42475090083](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-build-42475090083). W obu przypadkach powstały APK, sumy SHA-256 i plik DEPLOYMENT.txt. Były to kompilacje testowe; nie oznaczają potwierdzenia na fizycznym telefonie.
+
+Starszy test automatycznej publikacji istniejących APK również się udał: [ci-smoke-20261108](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-smoke-20261108).
 
 ## Status urządzenia
 
