@@ -26,7 +26,8 @@ public final class InstallJobService extends JobService {
     @Override public boolean onStartJob(JobParameters params) {
         if (CleanupFlow.blocked(this)) { State.log(this, "Instalator zablokowany po próbie cleanup"); return false; }
         cancelled = false;
-        State.log(this, "Retail: JobScheduler uruchomil InstallJobService");
+        State.log(this, "Retail: JobScheduler uruchomil InstallJobService; expedited="
+            + params.isExpeditedJob());
         new Thread(() -> {
             boolean retry = false;
             try {

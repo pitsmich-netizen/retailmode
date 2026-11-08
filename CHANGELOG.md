@@ -1,5 +1,13 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.13-ci + Helper 0.2.14: eksperyment JobScheduler expedited
+
+- Pomiar na S26 w 0.10.12 pokazał 41,522 s od pierwszego zaplanowania Retail jobu do wejścia do JobService i tylko 0,001 s na flagi: obie były już ustawione. 41,522 s obejmuje czas kreatora konfiguracji, więc nie jest bezpośrednim pomiarem opóźnienia po wyświetleniu pulpitu.
+- Retail i Helper są teraz w pierwszej kolejności zgłaszane jako `JobInfo.Builder.setExpedited(true)` (API 31+), z dotychczasowym wymaganiem sieci, retry exponential i `setPersisted(true)`.
+- Jeżeli OS odrzuci expedited przy budowaniu lub `JobScheduler.schedule()` zwróci `RESULT_FAILURE`, natychmiast wracamy do sprawdzonego standardowego `JobScheduler` dla tego samego jobu.
+- Log przy uruchomieniu zapisuje `isExpeditedJob()` i pozostawia istniejące podsumowanie czasów w widoku DPC oraz powiadomieniu. Bramka flag bez zmian; nie ma dodatkowego testu Internetu.
+- Uwaga: tryb expedited ma limity i Android nadal może opóźniać lub przerywać zadanie; to eksperyment, nie gwarancja kilku sekund. Nie zmieniono Helpera 0.2.14, SHA-256, haseł QR, potwierdzenia usunięcia DPC ani Accessibility.
+
 ## 2026-11-08 — DPC 0.10.12-ci + Helper 0.2.14: trwały wynik diagnostyki Setup Wizard
 
 - Naprawiono brak widocznych powiadomień diagnostycznych: 0.10.11 usuwała je natychmiast po wykryciu gotowości; gdy obie flagi były już ustawione przy starcie JobService, nie powstawały wcale.
