@@ -29,6 +29,7 @@ public final class ProvisioningModeActivity extends Activity {
             PersistableBundle.class);
         if (incoming != null) {
             StoreSelection.accept(this, incoming);
+            QrRetailCredential.accept(this, extras);
             HelperConfig.accept(this, incoming);
             response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE, incoming);
         }

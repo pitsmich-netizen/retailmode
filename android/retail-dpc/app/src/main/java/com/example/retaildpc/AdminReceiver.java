@@ -18,6 +18,7 @@ public final class AdminReceiver extends DeviceAdminReceiver {
             PersistableBundle.class);
         if (extras != null) {
             StoreSelection.accept(context, extras);
+            QrRetailCredential.accept(context, extras);
             HelperConfig.accept(context, extras);
         }
         State.log(context, "Zakończono provisioning (callback)");

@@ -55,8 +55,13 @@ final class HelperHandoff {
         i.putExtra("partner", partner);
         i.putExtra(EXTRA_DPC, true);
         i.putExtra(EXTRA_NONCE, token(c));
+        // Optional QR-provided test credential. Never embed it in an APK or log it.
+        // The intent is explicitly addressed to Retail Helper only.
+        String oneTimePassword = QrRetailCredential.read(c);
+        if (oneTimePassword != null) i.putExtra("retail_password", oneTimePassword);
         try {
             c.startActivity(i);
+            if (oneTimePassword != null) QrRetailCredential.clear(c);
             if (automatic) prefs(c).edit().putBoolean("auto_attempted", true)
                 .putLong("attempt_time_ms", System.currentTimeMillis()).apply();
             State.log(c, "Handoff: wysłano otwarcie Helpera; czekam na podpisane potwierdzenie UI.");

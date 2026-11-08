@@ -13,6 +13,7 @@ public final class PolicyComplianceActivity extends Activity {
             PersistableBundle.class);
         if (extras != null) {
             StoreSelection.accept(this, extras);
+            QrRetailCredential.accept(this, extras);
             HelperConfig.accept(this, extras);
         }
         State.log(this, "ADMIN_POLICY_COMPLIANCE / Site ID: " + State.site(this));

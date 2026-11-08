@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.7-ci + Helper 0.2.13: hasło Retail Mode w lokalnym QR
+
+- QR może przekazać opcjonalną wartość `retail_password` w `PROVISIONING_ADMIN_EXTRAS_BUNDLE`; **nie** ma hasła w publicznym kodzie GitHub ani w kompilowanym APK.
+- DPC odbiera sekret podczas provisioningu, przechowuje go tymczasowo szyfrowany przez Android Keystore i przekazuje tylko do jawnie wskazanej aktywności Helpera. Czyści kopię przy udanym uruchomieniu Helpera; DPC znika przed demo.
+- Gdy Android Keystore jest niedostępny, pamięć RAM jest wariantem awaryjnym, a po utracie procesu można wpisać hasło ręcznie.
+- Helper odbiera hasło do ulotnej pamięci, nie pokazuje go na ekranie i automatycznie zaznacza tryb hasła. Jeden świadomy START uruchamia istniejący automat; zgoda Accessibility i potwierdzenie odinstalowania DPC pozostają ręczne.
+- Wi-Fi może zostać skonfigurowane przez standardowe pola QR `PROVISIONING_WIFI_*`; dane sieci i hasło Retail Mode pojawiają się wyłącznie w lokalnym QR testowym, nigdy w repo.
+- Rejestracja profilu Experience, weryfikacja APK, postęp pobierania i ścieżki nawigacji Androida niezmienione. Wersja wymaga testu na Galaxy S26.
+
 ## 2026-11-08 — DPC 0.10.6-ci + Helper 0.2.12: rzeczywisty postęp i mniej kliknięć
 
 - Powiadomienie DPC pokazuje rzeczywiste bajty pobrane przez połączenie HTTPS; procent i pasek są widoczne tylko dla znanego rozmiaru. To NIE jest fikcyjny pasek postępu instalacji.

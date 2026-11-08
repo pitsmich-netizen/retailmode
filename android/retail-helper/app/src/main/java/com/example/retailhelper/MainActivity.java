@@ -43,13 +43,14 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         HandoffBridge.acceptFromDpc(this, getIntent());
+        acceptQrRetailPassword(getIntent());
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 36, 32, 24);
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         TextView title = new TextView(this);
-        title.setText("Retail Helper 0.2.12\nKonfiguracja demo");
+        title.setText("Retail Helper 0.2.13\nKonfiguracja demo");
         title.setTextSize(19);
         layout.addView(title);
         TextView notice = new TextView(this);
@@ -78,7 +79,7 @@ public final class MainActivity extends Activity {
         layout.addView(siteInput);
 
         autoPassword = new CheckBox(this);
-        autoPassword.setChecked(false);
+        autoPassword.setChecked(SecretMemory.available());
         autoPassword.setText("Automatycznie wpisz i zatwierdź hasło Retail Mode");
         layout.addView(autoPassword);
         passwordInput = new EditText(this);
@@ -93,6 +94,12 @@ public final class MainActivity extends Activity {
             @Override public void afterTextChanged(Editable e) { }
         });
         layout.addView(passwordInput);
+        if (SecretMemory.available()) {
+            TextView qrInfo = new TextView(this);
+            qrInfo.setText("Hasło Retail Mode jest gotowe z QR (tylko pamięć tymczasowa). " +
+                "Wybierz ROZPOCZNIJ DEMO, aby automatycznie je wpisać.");
+            layout.addView(qrInfo);
+        }
 
         add(layout, "ROZPOCZNIJ DEMO", this::confirmAndStart);
         status = new TextView(this);
@@ -162,13 +169,30 @@ public final class MainActivity extends Activity {
         }
     }
 
+    /**
+     * Accept only an explicit DPC handoff carrying the existing session token.
+     * Remove the plaintext extra immediately and never store or display it.
+     * If the process dies before START, user can type the password manually.
+     */
+    private void acceptQrRetailPassword(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra("from_dpc", false)) return;
+        if (!HandoffBridge.hasSession(this)) return;
+        String credential = intent.getStringExtra("retail_password");
+        intent.removeExtra("retail_password");
+        if (credential == null || credential.isEmpty() || credential.length() > 128) return;
+        char[] chars = credential.toCharArray();
+        try { SecretMemory.set(chars); }
+        finally { Arrays.fill(chars, '\\0'); }
+    }
+
     private void confirmAndStart() {
         if (!saveModel()) return;
         String site = siteInput.getText().toString().trim();
         if (!site.matches("[A-Za-z0-9_-]{4,40}")) {
             Toast.makeText(this, "Sprawdź Site ID", Toast.LENGTH_LONG).show(); return;
         }
-        if (autoPassword.isChecked() && passwordInput.length() == 0) {
+        if (autoPassword.isChecked() && passwordInput.length() == 0 &&
+                !SecretMemory.available()) {
             Toast.makeText(this, "Wpisz hasło lub wyłącz automatyczne hasło", Toast.LENGTH_LONG).show();
             return;
         }
@@ -180,12 +204,16 @@ public final class MainActivity extends Activity {
         CompletionHider.resetForExplicitStart(this); // Explicit restart clears marker and restores the icon.
         char[] credential = null;
         try {
-            if (full) {
+            if (full && passwordInput.length() > 0) {
                 Editable e = passwordInput.getText();
                 credential = new char[e.length()];
                 e.getChars(0, e.length(), credential, 0);
+                SecretMemory.set(credential);
+            } else if (!full) {
+                SecretMemory.clear();
             }
-            SecretMemory.set(credential);
+            // When the field is empty and full=true, keep the transient QR
+            // credential already in SecretMemory; never show it in EditText.
             passwordInput.getText().clear();
             if (PendingStart.accessibilityEnabled(this)) {
                 PendingStart.clear(this);
@@ -268,6 +296,9 @@ public final class MainActivity extends Activity {
         super.onNewIntent(i);
         setIntent(i);
         HandoffBridge.acceptFromDpc(this, i);
+        acceptQrRetailPassword(i);
+        if (autoPassword != null) autoPassword.setChecked(SecretMemory.available());
+        if (status != null) refresh();
     }
     private void refresh() {
         String accessibility = PendingStart.accessibilityEnabled(this) ? "włączona" : "wyłączona";
