@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.10-ci + Helper 0.2.14: szybsza bramka Setup Wizard
+
+- Pobieranie Retail Mode i Helpera czeka tylko na rzeczywiste flagi końca konfiguracji Androida: `device_provisioned` oraz `user_setup_complete`.
+- Usunięto dodatkowy test `NET_CAPABILITY_VALIDATED` i 2,5 s stabilizacji Internetu. Po poprawnym QR dostęp do sieci nadal jest warunkiem `JobScheduler.NETWORK_TYPE_ANY` oraz rzeczywistego pobierania HTTPS.
+- Częstotliwość sprawdzania końca konfiguracji zwiększona z ~1,4 s do 0,7 s. Log zawiera czas oczekiwania w ms, bez haseł i SSID.
+- Przy dłuższym kreatorze zachowano limit 4 minut i późniejsze ponawianie przez JobScheduler. Zachowano też 3 szybkie próby pobrania Retail Mode i integralność SHA-256.
+- Helper wciąż 0.2.14: bez zmian w zgodach Accessibility, starcie demo, handoff, potwierdzaniu deinstalacji Wrappera i sprzątaniu.
+- Poprzedni DPC 0.10.9-ci pozostaje punktem odniesienia sprawdzonym na S26. Nowy wariant wymaga testu na telefonie.
+
 ## 2026-11-08 — DPC 0.10.9-ci + Helper 0.2.14: pobieranie po konfiguracji Androida
 
 - Oba joby APK czekają na zakończenie Setup Wizard (device_provisioned i user_setup_complete) oraz zweryfikowaną przez Android sieć (INTERNET + VALIDATED).

@@ -36,7 +36,7 @@ public final class HelperInstallJobService extends JobService {
                     State.log(this, "Helper już zainstalowany — pomijam");
                 } else if (!SetupNetworkGate.await(this, "helper", () -> cancelled)) {
                     retry = !cancelled && !CleanupFlow.blocked(this);
-                    State.log(this, "Helper: oczekuję na zakończenie konfiguracji i Internet");
+                    State.log(this, "Helper: oczekuję na zakończenie konfiguracji Androida");
                 } else {
                     DpcProgress.stage(this, "helper_downloading", "Pobieram Retail Helper…");
                     State.log(this, "Pobieram Helper APK z " + HelperConfig.url(this));

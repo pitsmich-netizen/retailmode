@@ -39,7 +39,7 @@ public final class InstallJobService extends JobService {
                     DpcProgress.preparePermission(this);
                     if (!SetupNetworkGate.await(this, "retail", () -> cancelled)) {
                         retry = !cancelled && !CleanupFlow.blocked(this);
-                        State.log(this, "Retail: oczekuję na zakończenie konfiguracji i Internet");
+                        State.log(this, "Retail: oczekuję na zakończenie konfiguracji Androida");
                     } else {
                         File file = new File(getCacheDir(), "RetailMode-test.apk");
                         downloadWithFastRetry(file);
