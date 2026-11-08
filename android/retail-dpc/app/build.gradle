@@ -60,8 +60,8 @@ android {
         buildConfigField 'String', 'LOCAL_TEST_RETAIL_PASSWORD', '"' + escapeBuildConfig(testRetailPassword) + '"'
         buildConfigField 'String', 'HELPER_URL', '"' + escapeBuildConfig(helperUrl) + '"'
         buildConfigField 'String', 'HELPER_SHA256', '"' + helperSha256 + '"'
-        versionCode 31
-        versionName '0.10.8-ci-retry-progress-cleanup'
+        versionCode 32
+        versionName '0.10.9-ci-setup-network-gate'
     }
     buildFeatures {
         buildConfig true

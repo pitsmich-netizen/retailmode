@@ -34,6 +34,9 @@ public final class HelperInstallJobService extends JobService {
                     State.log(this, "STOP Helper: Wrapper nie jest Device Owner");
                 } else if (HelperStatus.installed(this)) {
                     State.log(this, "Helper już zainstalowany — pomijam");
+                } else if (!SetupNetworkGate.await(this, "helper", () -> cancelled)) {
+                    retry = !cancelled && !CleanupFlow.blocked(this);
+                    State.log(this, "Helper: oczekuję na zakończenie konfiguracji i Internet");
                 } else {
                     DpcProgress.stage(this, "helper_downloading", "Pobieram Retail Helper…");
                     State.log(this, "Pobieram Helper APK z " + HelperConfig.url(this));

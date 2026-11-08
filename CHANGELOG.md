@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.9-ci + Helper 0.2.14: pobieranie po konfiguracji Androida
+
+- Oba joby APK czekają na zakończenie Setup Wizard (device_provisioned i user_setup_complete) oraz zweryfikowaną przez Android sieć (INTERNET + VALIDATED).
+- Internet musi być stabilny przez co najmniej 2,5 s; nie opieramy gotowości na arbitralnym czasie od skanowania QR.
+- Sprawdzenie w wątku JobService nie blokuje kreatora. Jeśli konfiguracja trwa ponad 4 min, JobScheduler podejmuje kolejną próbę.
+- Logi pokazują tylko powód oczekiwania (setup/internet/stabilizacja) i czas; bez haseł, SSID i danych sklepu.
+- Zachowano szybkie retry Retail Mode, dwa paski postępu, przekazanie hasła przez QR, automatyzację rejestracji i ręczne potwierdzenie usunięcia DPC.
+- Nie zmieniono Helpera 0.2.14; nowy eksperymentalny build wymaga testu S26.
+
 ## 2026-11-08 — DPC 0.10.8-ci + Helper 0.2.14: szybkie retry, pasek, potwierdzenie usunięcia
 
 - Retail Mode APK: maksymalnie 3 lokalne próby pobrania przy przejściowych błędach I/O lub HTTP 408/429/5xx, z przerwami 3 s i 8 s. Po ich wyczerpaniu nadal pozostaje JobScheduler, bez utraty sprawdzania SHA-256.

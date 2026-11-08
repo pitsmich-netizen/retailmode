@@ -37,11 +37,16 @@ public final class InstallJobService extends JobService {
                     State.log(this, "Demo już zainstalowane – pomijam");
                 } else {
                     DpcProgress.preparePermission(this);
-                    File file = new File(getCacheDir(), "RetailMode-test.apk");
-                    downloadWithFastRetry(file);
-                    if (!cancelled) {
-                        DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
-                        install(file);
+                    if (!SetupNetworkGate.await(this, "retail", () -> cancelled)) {
+                        retry = !cancelled && !CleanupFlow.blocked(this);
+                        State.log(this, "Retail: oczekuję na zakończenie konfiguracji i Internet");
+                    } else {
+                        File file = new File(getCacheDir(), "RetailMode-test.apk");
+                        downloadWithFastRetry(file);
+                        if (!cancelled && !CleanupFlow.blocked(this)) {
+                            DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
+                            install(file);
+                        }
                     }
                 }
             } catch (Exception e) {
