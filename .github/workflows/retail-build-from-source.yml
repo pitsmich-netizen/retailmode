@@ -143,6 +143,7 @@ jobs:
           git commit -m "CI ${GITHUB_RUN_ID}: stage signed DPC APK"
           git push origin HEAD:main
           DPC_COMMIT="$(git rev-parse HEAD)"
+          echo "DPC_COMMIT=$DPC_COMMIT" >> "$GITHUB_ENV"
           echo "DPC_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${DPC_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" >> "$GITHUB_ENV"
           cp "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" output/RetailHelper.apk
           cp "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" output/RetailDcp.apk
