@@ -1,0 +1,172 @@
+name: Build and publish Retail test APKs from sources
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bootstrap/retail-ci-sources.zip'
+      - 'android/retail-dpc/**'
+      - 'android/retail-helper/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: retail-build-publish-main
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import first source bundle (one-time bootstrap)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f android/retail-dpc/app/build.gradle ] || [ ! -f android/retail-helper/app/build.gradle.kts ]; then
+            test -s bootstrap/retail-ci-sources.zip || {
+              echo 'Missing sources. Upload RetailMode_CI_Starter_DPC102_Helper029.zip to bootstrap/retail-ci-sources.zip once.'
+              exit 1
+            }
+            unzip -oq bootstrap/retail-ci-sources.zip -d .
+            test -f android/retail-dpc/app/build.gradle
+            test -f android/retail-helper/app/build.gradle.kts
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add android/
+            git commit -m 'Bootstrap Android source projects for reproducible CI'
+            git push origin HEAD:main
+          fi
+
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 16 build SDK
+        shell: bash
+        run: sdkmanager 'platforms;android-36' 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Restore optional stable TEST signing key
+        env:
+          RETAIL_CI_DEBUG_KEYSTORE_B64: ${{ secrets.RETAIL_CI_DEBUG_KEYSTORE_B64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$RETAIL_CI_DEBUG_KEYSTORE_B64" ]; then
+            mkdir -p "$HOME/.android"
+            printf '%s' "$RETAIL_CI_DEBUG_KEYSTORE_B64" | base64 --decode > "$HOME/.android/debug.keystore"
+            chmod 600 "$HOME/.android/debug.keystore"
+            echo 'Using stable test signing key from GitHub Secrets.'
+          else
+            echo 'WARNING: using ephemeral debug signing key. Fresh wipe only; existing installs cannot be updated.'
+          fi
+
+      - name: Compile Helper APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon -p android/retail-helper :app:assembleDebug
+          test -s android/retail-helper/app/build/outputs/apk/debug/app-debug.apk
+          mkdir -p "provisioning/ci/${GITHUB_RUN_ID}" output
+          cp android/retail-helper/app/build/outputs/apk/debug/app-debug.apk "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
+          echo "HELPER_SHA=$(sha256sum "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Commit immutable helper asset and remember its Git commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
+          git commit -m "CI ${GITHUB_RUN_ID}: stage signed Helper APK"
+          git push origin HEAD:main
+          HELPER_COMMIT="$(git rev-parse HEAD)"
+          echo "HELPER_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${HELPER_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" >> "$GITHUB_ENV"
+
+      - name: Pin exact helper URL and SHA for DPC build
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            printf 'helper.url=%s\n' "$HELPER_RAW_URL"
+            printf 'helper.sha256=%s\n' "$HELPER_SHA"
+          } > android/retail-dpc/helper-apk.properties
+          grep -Fx "helper.sha256=${HELPER_SHA}" android/retail-dpc/helper-apk.properties
+
+      - name: Compile DPC APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon -p android/retail-dpc :app:assembleDebug
+          test -s android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk
+          cp android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
+
+      - name: Verify both APK signatures are valid and match
+        shell: bash
+        run: |
+          set -euo pipefail
+          HELPER_APK="provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
+          DPC_APK="provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
+          apksigner verify --verbose --print-certs "$HELPER_APK" > /tmp/helper-certs.txt
+          apksigner verify --verbose --print-certs "$DPC_APK" > /tmp/dpc-certs.txt
+          H="$(sed -n 's/.*Signer #1 certificate SHA-256 digest: //p' /tmp/helper-certs.txt | head -1)"
+          D="$(sed -n 's/.*Signer #1 certificate SHA-256 digest: //p' /tmp/dpc-certs.txt | head -1)"
+          test -n "$H" && test "$H" = "$D" || {
+            echo 'DPC and Helper certificate mismatch: refusing publication.'
+            exit 1
+          }
+          echo "Matching Android signing certificate: $D"
+          sha256sum "$HELPER_APK" "$DPC_APK" > output/SHA256SUMS.txt
+
+      - name: Commit immutable DPC and release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
+          git commit -m "CI ${GITHUB_RUN_ID}: stage signed DPC APK"
+          git push origin HEAD:main
+          DPC_COMMIT="$(git rev-parse HEAD)"
+          echo "DPC_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${DPC_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" >> "$GITHUB_ENV"
+          cp "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" output/RetailHelper.apk
+          cp "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" output/RetailDcp.apk
+
+      - name: Publish auto-generated test prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'DPC_RAW_URL=%s\nDPC_SHA256=%s\nHELPER_RAW_URL=%s\nHELPER_SHA256=%s\n' \
+            "$DPC_RAW_URL" "$(sha256sum output/RetailDcp.apk | cut -d' ' -f1)" \
+            "$HELPER_RAW_URL" "$HELPER_SHA" > output/DEPLOYMENT.txt
+          gh release create "ci-build-${GITHUB_RUN_ID}" \
+            output/RetailDcp.apk output/RetailHelper.apk output/SHA256SUMS.txt output/DEPLOYMENT.txt \
+            --target "$DPC_COMMIT" \
+            --title "Retail CI ${GITHUB_RUN_ID} — experimental DPC + Helper" \
+            --notes 'Automatically compiled and signed test APKs. Device Owner/Accessibility flow has not been tested on a handset. If no stable signing-key secret is configured, a fresh device wipe is required for installation and updates are not supported. No Wi-Fi QR secrets included.' \
+            --prerelease
+
+      - name: Upload CI build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retail-android-ci-${{ github.run_id }}
+          path: output/
+          if-no-files-found: ignore
