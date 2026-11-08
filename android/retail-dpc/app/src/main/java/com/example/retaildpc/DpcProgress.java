@@ -150,12 +150,15 @@ final class DpcProgress {
         if (!"retail".equals(task) || CleanupFlow.blocked(c)) return;
         String pending = !provisioned && !finished ? "obie flagi"
             : !provisioned ? "device_provisioned" : "user_setup_complete";
-        String line = "device_provisioned=" + (provisioned ? 1 : 0)
-            + " | user_setup_complete=" + (finished ? 1 : 0);
-        String detail = "Czekam: " + pending + " | " + (elapsedMs / 1000) + " s"
-            + "\\n" + line
-            + "\\nPierwsze 1: device +" + provisionedAtMs
-            + " ms, user +" + finishedAtMs + " ms";
+        String deviceAt = provisionedAtMs >= 0
+            ? "+" + (provisionedAtMs / 1000) + " s" : "nadal 0";
+        String userAt = finishedAtMs >= 0
+            ? "+" + (finishedAtMs / 1000) + " s" : "nadal 0";
+        String detail = "Czekam na: " + pending + " | " + (elapsedMs / 1000) + " s"
+            + "\n" + "device_provisioned=" + (provisioned ? 1 : 0)
+            + " (od " + deviceAt + ")"
+            + "\n" + "user_setup_complete=" + (finished ? 1 : 0)
+            + " (od " + userAt + ")";
         try {
             NotificationManager nm = c.getSystemService(NotificationManager.class);
             if (nm == null) return;
