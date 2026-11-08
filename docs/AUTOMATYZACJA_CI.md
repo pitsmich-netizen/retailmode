@@ -35,7 +35,9 @@ Nie commitować kluczy, haseł ani `release-signing.properties`. Nie publikować
 - Kopiowanie APK z Releases przez API GitHub i kontrola SHA-256 — sukces.
 - Automatyczna publikacja istniejących, sprawdzonych APK jako wydania `ci-smoke-20261108` — sukces.
 - Jednorazowy import obu projektów Android Studio — sukces.
-- Pierwszy build źródłowy — zatrzymał się na przestarzałym kroku Android SDK `tools`. Workflow zaktualizowano, aby korzystał z SDK runnera; kolejne uruchomienia trzeba oceniać według wyników GitHub Actions.
+- Pierwszy build źródłowy — zatrzymał się na przestarzałym kroku Android SDK `tools`. Błąd usunięto.
+- **Buildy źródłowe po poprawce — sukces:** [42474697059](https://github.com/pitsmich-netizen/retailmode/actions/runs/42474697059) oraz [42475090083](https://github.com/pitsmich-netizen/retailmode/actions/runs/42475090083). Wydania: `ci-build-42474697059` i `ci-build-42475090083`.
+- Po usunięciu jednorazowych workflowów repozytorium ma tylko jedną aktywną ścieżkę kompilacji, a poprzednie APK i QR pozostają używalne.
 
 ## Co pozostaje do weryfikacji
 
