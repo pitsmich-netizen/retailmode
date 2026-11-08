@@ -38,7 +38,7 @@ final class QrRetailCredential {
         }
         char[] temporary = value.toCharArray();
         SecretMemory.set(temporary);
-        Arrays.fill(temporary, '\\0');
+        Arrays.fill(temporary, '\0');
         try {
             KeyStore store = KeyStore.getInstance("AndroidKeyStore");
             store.load(null);

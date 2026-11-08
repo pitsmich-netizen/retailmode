@@ -182,7 +182,7 @@ public final class MainActivity extends Activity {
         if (credential == null || credential.isEmpty() || credential.length() > 128) return;
         char[] chars = credential.toCharArray();
         try { SecretMemory.set(chars); }
-        finally { Arrays.fill(chars, '\\0'); }
+        finally { Arrays.fill(chars, '\0'); }
     }
 
     private void confirmAndStart() {
