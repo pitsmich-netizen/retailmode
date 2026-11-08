@@ -1,10 +1,11 @@
-# CHANGELOG — retailmode repository
+# CHANGELOG — retailmode
 
-## 2026-11-08 — GitHub Actions automation (test)
+## 2026-11-08 — porządki i CI
 
-- Automatyczna publikacja prerelease `ci-smoke-20261108`, zweryfikowana sukcesem workflow.
-- Dodano źródłowy pipeline `retail-build-from-source.yml`, uruchamiany po imporcie projektów lub zmianach kodu.
-- Pipeline planuje automatyczne budowanie obu APK, przypięcie SHA-256 Helpera w DPC, zgodność certyfikatów, niezmienne GitHub RAW i publikację testową.
-- Przygotowano pakiet źródeł DPC 0.10.2-ci + Helper 0.2.9 do jednorazowego importu.
-- Źródłowy pipeline nie jest jeszcze uruchomiony na GitHubie, do czasu wprowadzenia źródeł.
-- Obecne, przetestowane na telefonie wersje i ich QR pozostają bez zmian.
+- Oba projekty Android Studio zaimportowane do `android/`.
+- Usunięto zbędny ZIP bootstrap, jednorazowe workflowy kopiowania/publikacji oraz stare, powielone instrukcje wersji DPC. Historię zachowano w Git.
+- Pozostawiono stare Releases i trzy binaria RAW wykorzystywane przez wcześniejsze kody QR.
+- Naprawiono inicjalizację Android SDK w workflow źródłowej kompilacji (poprzednio próba instalacji wycofanego `tools`).
+- Zaktualizowano README, dokumentację CI i instrukcje bieżącej wersji DPC 0.10.2-ci + Helpera 0.2.9.
+- Pierwsza automatyczna publikacja **bez kompilacji** zakończyła się sukcesem: `ci-smoke-20261108`.
+- Kod bieżącej wersji nadal wymaga pełnego testu na Galaxy S26.

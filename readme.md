@@ -1,18 +1,30 @@
-# retailmode — Samsung Retail Mode automation (experimental)
+# retailmode — Samsung Retail Mode (projekt testowy)
 
-Testowy projekt DPC Wrapper + Retail Helper + QR Device Owner dla urządzeń Samsung.
+Projekt: **DPC Wrapper → Retail Helper → Samsung Retail Mode**, uruchamiany przez QR Device Owner na autoryzowanym urządzeniu testowym.
 
-## Wersje i stan
+## Aktualna struktura
 
-- DPC 0.10.1 (przesłany APK w rozmowie) + Helper 0.2.9 — testy dystrybucji przez GitHub RAW, brak pełnego testu tej pary na S26.
-- DPC 0.10.0 + Helper 0.2.9 — zweryfikowane APK zapisane jako niezmienione kopie w `provisioning/`.
-- DPC 0.9.5 + Helper 0.2.5 — wcześniejsza, praktycznie przetestowana podstawa konfiguracji S26.
-- Cicha deinstalacja DPC nie została potwierdzona; Android wyświetla systemową zgodę. Późniejsze poprawki ikony Helpera nie są jeszcze zweryfikowane na urządzeniu.
+- `android/retail-dpc/` — źródła Wrappera, który przygotowuje telefon, pobiera pozostałe aplikacje i zwalnia Device Ownera przed uruchomieniem demo.
+- `android/retail-helper/` — źródła Helpera, który po ręcznym nadaniu Dostępności prowadzi konfigurację demo, a następnie wyłącza usługę i ma ukryć ikonę.
+- `provisioning/` — celowo zachowane, wcześniej zweryfikowane APK pod adresami RAW. **Nie usuwać**, bo wcześniejsze kody QR wskazują na te ścieżki.
+- `docs/AUTOMATYZACJA_CI.md` — kompilacja, podpisy i testowe publikacje.
 
-## Automatyzacja GitHub
+## GitHub Actions
 
-- **Działająca:** workflow `publish-verified-test-apks.yml` bez udziału użytkownika stworzył i zweryfikował [prerelease ci-smoke-20261108](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-smoke-20261108) z DPC 0.10.0, Helperem 0.2.9 oraz SHA256SUMS.txt.
-- **Przygotowana, jeszcze nieuruchomiona:** `retail-build-from-source.yml` buduje i publikuje obie aplikacje po jednorazowym imporcie źródeł; następne aktualizacje tekstowego kodu będą uruchamiać go automatycznie.
-- [Pełna dokumentacja CI](docs/AUTOMATYZACJA_CI.md) i [folder jednorazowego importu](bootstrap/README.md).
+Jedyny aktywny pipeline Android: [Build and publish Retail test APKs from sources](.github/workflows/retail-build-from-source.yml). Po zmianie źródeł automatycznie przygotowuje parę APK, przypina SHA-256 Helpera w DPC i publikuje **testowe** wydanie GitHub Releases z `DEPLOYMENT.txt` oraz linkami RAW.
 
-Nigdy nie publikuj hasła Wi-Fi, hasła Retail Mode ani klucza podpisu w tym publicznym repozytorium. Wydania CI są wyłącznie testowe i mogą wymagać wyczyszczenia urządzenia przed instalacją.
+Pierwszy test samej automatycznej publikacji istniejących APK zakończył się powodzeniem: [ci-smoke-20261108](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-smoke-20261108). Nie jest on dowodem działania nowego buildu na telefonie.
+
+## Status urządzenia
+
+- Wcześniej sprawdzona baza: **DPC 0.9.5 + Helper 0.2.5** — instalacja, przekazanie sterowania, automatyczna konfiguracja Retail Mode i odinstalowanie DPC z potwierdzeniem.
+- Najnowsze źródła: **DPC 0.10.2-ci + Helper 0.2.9** — wersja eksperymentalna, wymagająca testu na Galaxy S26.
+- Cicha deinstalacja DPC **nie została osiągnięta**; Android może wyświetlić okno potwierdzenia.
+- Ukrycie ikony Helpera 0.2.9 i pełna stabilność dystrybucji przez RAW wymagają testu S26.
+- Samsung Retail Mode nadal pochodzi z osobnego wydania `rmtest`; jego pobieranie nie jest objęte w pełni nowym pipeline.
+
+## Bezpieczeństwo
+
+Repozytorium jest **publiczne**. Nie dodawaj tu haseł Wi-Fi, kodów QR zawierających hasło, haseł Retail Mode, plików `.keystore`/`.jks`, prywatnych kluczy ani danych sklepu. Workflow używa wyłącznie testowego podpisywania. Nie jest to wersja produkcyjna.
+
+Historyczne źródła i dokumenty usunięte z bieżącego drzewa pozostają w historii commitów. Starsze Releases zachowano jako punkty odniesienia.

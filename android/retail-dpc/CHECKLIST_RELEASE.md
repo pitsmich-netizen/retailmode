@@ -1,10 +1,15 @@
-# Test DPC 0.10.1 / Helper 0.2.9
+# Lista kontrolna — testowy build CI
 
-- [ ] Skompiluj APK (versionCode 24).
-- [ ] Porównaj podpis z DPC 0.10.0.
-- [ ] Zweryfikuj zbudowany URL Helpera 0.2.9: raw.githubusercontent.com, katalog provisioning.
-- [ ] Zweryfikuj SHA-256 Helpera 0.2.9: 5382663fd48cd77ee805bb4ad272ebcd8e8ddc1ef1e978a1f40dc7cf59351220.
-- [ ] Publikacja testowa dcp-101-test i kopia raw DPC dla QR (sprawdź SHA).
-- [ ] Na S26: przejście QR / instalacja DPC / instalacja Retail Mode / instalacja Helpera.
-- [ ] Test otwierania ustawień Dostępności, rejestracji demo oraz ukrycia ikony Helpera.
-- [ ] Zwolnienie Device Ownera i reakcja na deinstalację DPC (potwierdzenie może być konieczne).
+- [ ] GitHub Actions `retail-build-from-source.yml` zakończony sukcesem.
+- [ ] W wydaniu `ci-build-<run-id>` są obydwa APK, `SHA256SUMS.txt` i `DEPLOYMENT.txt`.
+- [ ] SHA-256 DPC i Helpera zgodne z manifestem.
+- [ ] Oba pliki są podpisane i mają zgodny certyfikat.
+- [ ] DPC ma poprawny URL oraz SHA-256 zbudowanego Helpera.
+- [ ] Adresy RAW pobierają się prawidłowo przed wygenerowaniem QR.
+- [ ] Samsung Retail Mode APK jest nadal dostępny i pobieralny.
+- [ ] S26: konfiguracja QR Device Owner przechodzi instalację.
+- [ ] S26: DPC instaluje Retail Mode oraz Helpera i przekazuje sterowanie.
+- [ ] S26: DPC zwalnia uprawnienia i usuwa się (może wymagać kliknięcia „Odinstaluj”).
+- [ ] S26: po ręcznym nadaniu Accessibility Helper automatycznie konfiguruje demo.
+- [ ] S26: Accessibility jest wyłączone po rozpoczęciu pobierania, ikona Helpera nie jest widoczna.
+- [ ] Brak pozostawionego Device Ownera i niepożądanych trwałych polityk.

@@ -1,6 +1,0 @@
-RETAIL DPC 0.10.1 + HELPER 0.2.9 (RAW MIRROR TEST)
-
-1. Open project in Android Studio, use Build > Build APK(s).
-2. Send app-debug.apk for verification, do NOT publish or reset the phone yet.
-3. This build downloads the identical Helper 0.2.9 APK via raw.githubusercontent.com.
-4. No changes to the automation, Device Owner release or uninstall logic.

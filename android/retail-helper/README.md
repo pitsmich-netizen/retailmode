@@ -1,37 +1,21 @@
-# Retail Helper 0.2.9 — One UI, domyślnie niewidoczna ikona
+# Retail Helper 0.2.9 — Samsung One UI
 
-**Test źródłowy; kompilacja oraz wynik na Galaxy S26 do weryfikacji.**
+Pakiet: `com.example.retailhelper` • versionCode 15.
 
-Nowa zmiana: alias LAUNCHER jest **wyłączony już w AndroidManifest.xml** (`android:enabled="false"`), zamiast deklaracji włączonej i późniejszego wyłączania. Android 10+ wstrzykuje „syntetyczną” ikonę kierującą do informacji o aplikacji, jeśli ukryto ikonę aplikacji, która miała ją domyślnie włączoną. DPC otwiera Helpera przez jawny komponent `.MainActivity` i nie potrzebuje ikony. Nie wyłączamy pakietu ani usługi Accessibility; po starcie pobierania zachowujemy jej wyłączenie i zapis stanu.
+Helper jest instalowany i uruchamiany przez DPC (jawny komponent `.MainActivity`). Użytkownik musi świadomie przyznać usłudze Dostępności wymaganą zgodę. Po jej udzieleniu Helper automatycznie rozpoczyna konfigurację Samsung Retail Mode.
 
-Uwaga: brak ikony również **przed** rozpoczęciem demo. Jeśli DPC nie uruchomi Helpera, trzeba skorzystać z ręcznego otwarcia go w DPC podczas gdy Wrapper nadal jest zainstalowany. Urządzenia OEM mogą zachować własne zachowania i wymagają testu.
+## Ukrywanie ikony
 
-Próba nawigacji do „Zainstalowane aplikacje” jest warunkowa: wyłącznie eksportowane i dostępne aktywności Settings, w przeciwnym razie standardowa strona Dostępności. Nie ma automatycznego włączania usługi ani animowanego podświetlania elementów systemowego UI przed zgodą.
+Alias LAUNCHER jest **domyślnie wyłączony** w manifeście. Celem jest uniknięcie zastępczej ikony prowadzącej do „Informacje o aplikacji” w Samsung One UI. Helper **pozostaje zainstalowany**, ale po rozpoznaniu początku pobierania demo wyłącza własną usługę Dostępności.
 
-# Retail Helper 0.2.8 — odświeżanie ikony w One UI
+To zachowanie wymaga praktycznego potwierdzenia na S26 w wersji 0.2.9. Nie twierdzimy, że ikona zniknęła bez testu.
 
-**Status: tylko projekt źródłowy, niekompilowany i nietestowany na Galaxy S26.**
+## Nawigacja i komunikaty
 
-**Nowość 0.2.8:** po starcie pobierania demo i wyłączeniu Accessibility komponent `LauncherActivity` jest wyłączany z flagą `0` zamiast `DONT_KILL_APP`. Android może wtedy zakończyć proces, co ma pomóc odświeżyć listę wszystkich aplikacji One UI. To hipoteza do sprawdzenia, nie gwarancja działania na Samsungu. Pozostałe komponenty i pakiet Helpera pozostają zainstalowane.
+Helper próbuje otworzyć możliwie bliski ekran ustawień zainstalowanych usług Dostępności; jeśli Samsung go nie udostępnia, otwiera ogólną stronę Dostępności. Nie uzyskuje automatycznie zgody i nie modyfikuje systemowego interfejsu. Zachowano komunikaty etapów i automatyczny START.
 
-## Cel
+## Integracja DPC
 
-Zachowuje sprawdzony automatyczny START i konfigurację Retail Mode z 0.2.5 oraz ukrywanie ikony z projektu 0.2.6. **Helper nie odinstalowuje się**: po potwierdzeniu pobierania wyłącza Accessibility i wyłącza tylko komponent ikony.
+Protokół potwierdzenia uruchomienia, zwolnienia Device Owner i próby usuwania DPC jest eksperymentalny. Ciche usunięcie DPC nie udało się na S26; systemowy prompt może być konieczny.
 
-### Nowy protokół DPC 0.9.8
-
-1. Helper potwierdza rzeczywiste otwarcie i pozwala DPC zwolnić Device Owner.
-2. DPC wysyła `RELEASE_RESULT_095` z `silent_probe_098=true`.
-3. Helper weryfikuje podpis i nonce, zapisuje stan zwolnienia trwale i potwierdza odbiór przez `RELEASE_RECEIVED_098`.
-4. DPC dopiero teraz może spróbować `PackageInstaller.uninstall(self)`; Helper czeka maksymalnie 9 s, nie otwierając konkurencyjnego okna.
-5. Jeśli DPC nadal jest zainstalowany, Helper przechodzi do **systemowego potwierdzenia odinstalowania**. Jeśli DPC zniknął, Helper nie otwiera okna.
-
-To jest eksperyment: Android może wymagać zgody; nie ma gwarancji cichej deinstalacji. Nie przekazujemy Device Ownera do Helpera.
-
-### Kompilacja i wydanie
-
-W Android Studio otwórz projekt i wybierz `Build > Build APK(s)`. Po skompilowaniu prześlij APK do weryfikacji podpisu i wersji. Publikację oznacz `helper-027-test`. Następnie w kolejnym DPC należy przypiąć URL i SHA-256 opublikowanego pliku (protokół pozostaje zgodny z 0.9.8).
-
-### Bezpieczeństwo i zakres
-
-Wyłącznie autoryzowane urządzenie testowe. DPC 0.9.5 + Helper 0.2.5 pozostają potwierdzoną bazą. Funkcje nowego protokołu i ukrywania ikony wymagają testu na S26.
+Kompilacja i publikacja testowa: [GitHub Actions](../../.github/workflows/retail-build-from-source.yml). Starsze szczegóły historyczne są w [CHANGELOG.md](CHANGELOG.md).

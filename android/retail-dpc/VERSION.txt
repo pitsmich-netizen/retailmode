@@ -1,9 +1,0 @@
-Retail DPC Wrapper: 0.10.1-helper029-rawmirror
-versionCode: 24
-applicationId: com.example.retaildpc
-Helper version: 0.2.9 / versionCode 15
-Helper source: https://raw.githubusercontent.com/pitsmich-netizen/retailmode/main/provisioning/RetailHelper-029.apk
-Helper SHA-256: 5382663fd48cd77ee805bb4ad272ebcd8e8ddc1ef1e978a1f40dc7cf59351220
-Build status: SOURCE ONLY; not compiled or tested on S26
-Changes: switch Helper downloader to verified raw URL and accept this pinned URL in QR extras.
-Retained: Retail Mode installation, progress, handoff, Device Owner cleanup, system uninstall fallback.
