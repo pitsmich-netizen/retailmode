@@ -345,6 +345,7 @@ public final class MainActivity extends Activity {
             "\nPartner QR: " + StoreSelection.partner(this) +
             "\n\nAUTOMAT: " + step + "\n" + AutomationState.info(this) +
             "\n\nLog automatu:" + AutomationState.logs(this) +
+            "\n\nDIAGNOSTYKA STARTU:\n" + DpcProgress.lastSetupDiagnostic(this) +
             "\n\nLog instalatora:" + State.logs(this) +
             "\n\nLokalny sekret kompilacji: " + (!BuildConfig.LOCAL_TEST_RETAIL_PASSWORD.isEmpty() ? "TAK (test; odtwarzalny z APK)" : "BRAK") +
             "\n\nTRYB CLEANUP: " + (CleanupFlow.blocked(this) ? "INSTALATOR ZABLOKOWANY" : "nieuruchomiony") +

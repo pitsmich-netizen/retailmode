@@ -179,6 +179,54 @@ final class DpcProgress {
         }
     }
 
+    /**
+     * Persist the diagnostic after the setup gate finishes. The old 0.10.11
+     * cleared it immediately, so the user never saw it if the flags were
+     * already ready at JobService start.
+     */
+    static synchronized void completeSetupFlagDiagnostics(Context c, String task,
+            long queuedMs, long gateMs, long deviceAtMs, long userAtMs) {
+        if (!"retail".equals(task) || CleanupFlow.blocked(c)) return;
+        String job = queuedMs >= 0 ? (queuedMs / 1000.0) + " s" : "niedostępne";
+        String device = deviceAtMs == 0L ? "1 przy pierwszym odczycie"
+            : deviceAtMs >= 0 ? "1 wykryto po " + (deviceAtMs / 1000.0) + " s" : "nie wykryto";
+        String user = userAtMs == 0L ? "1 przy pierwszym odczycie"
+            : userAtMs >= 0 ? "1 wykryto po " + (userAtMs / 1000.0) + " s" : "nie wykryto";
+        String summary = "Od kolejki do JobService: " + job
+            + "\nOczekiwanie na flagi: " + (gateMs / 1000.0) + " s"
+            + "\ndevice_provisioned: " + device
+            + "\nuser_setup_complete: " + user;
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putString("setup_result", summary).apply();
+        try {
+            NotificationManager nm = c.getSystemService(NotificationManager.class);
+            if (nm == null) return;
+            ensureChannel(nm);
+            if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                State.log(c, "Diagnostyka: brak zgody na powiadomienia; wynik pozostaje w logu");
+                return;
+            }
+            Notification.Builder b = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
+            b.setSmallIcon(R.drawable.retail_progress)
+                .setContentTitle("Diagnostyka startu — wynik")
+                .setContentText("JobScheduler: " + job
+                    + "; flagi: " + (gateMs / 1000.0) + " s")
+                .setStyle(new Notification.BigTextStyle().bigText(summary))
+                .setOnlyAlertOnce(true).setOngoing(true)
+                .setCategory(Notification.CATEGORY_STATUS).setShowWhen(false);
+            nm.notify(SETUP_DIAG_ID, b.build());
+        } catch (RuntimeException e) {
+            State.log(c, "Diagnostyka wyniku: " + e.getClass().getSimpleName());
+        }
+    }
+
+    static String lastSetupDiagnostic(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .getString("setup_result", "Wynik pomiarów jeszcze niedostępny");
+    }
+
     static synchronized void clearSetupFlagDiagnostics(Context c, String task) {
         if (!"retail".equals(task)) return;
         try {

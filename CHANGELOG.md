@@ -1,5 +1,13 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.12-ci + Helper 0.2.14: trwały wynik diagnostyki Setup Wizard
+
+- Naprawiono brak widocznych powiadomień diagnostycznych: 0.10.11 usuwała je natychmiast po wykryciu gotowości; gdy obie flagi były już ustawione przy starcie JobService, nie powstawały wcale.
+- Teraz po pomyślnym sprawdzeniu flag pojawia się osobne powiadomienie „Diagnostyka startu — wynik”, które pozostaje widoczne podczas pobierania Retail Mode do czasu zwolnienia i usunięcia Wrappera.
+- Wynik rozdziela czas od zaplanowania JobSchedulera do uruchomienia zadania i czas oczekiwania w bramce. Informuje też, czy każda flaga była już ustawiona przy pierwszym odczycie, czy została zaobserwowana później; nie twierdzi, że zna rzeczywisty moment zmiany sprzed pierwszego odczytu.
+- Wynik zapisany również w lokalnym widoku diagnostyki DPC i logach, na wypadek ukrycia powiadomień przez system.
+- Bez zmian warunków rozpoczęcia pobierania i Helpera 0.2.14. QR, szybkość retry, SHA-256, pasek pobierania, ręczne usuwanie DPC i wyłączanie Accessibility zachowane.
+
 ## 2026-11-08 — DPC 0.10.11-ci + Helper 0.2.14: diagnostyka opóźnienia flag Setup Wizard
 
 - Bez zmian warunków uruchomienia: nadal wymagane `device_provisioned=1` i `user_setup_complete=1`, dostępność sieci nadzorowana przez JobScheduler (bez dodatkowego testu Internetu).

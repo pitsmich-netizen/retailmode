@@ -51,9 +51,13 @@ final class SetupNetworkGate {
                     previousBits = bits;
                 }
                 if (provisioned && finished) {
+                    final long queuedMs = queuedForMs(c, task);
                     State.log(c, "Gotowosc " + task + ": obie flagi 1 po " + elapsed
+                        + " ms; uruchomienie zadania po " + queuedMs
                         + " ms; device_provisioned od +" + provisionedAt
                         + " ms; user_setup_complete od +" + setupCompleteAt + " ms");
+                    DpcProgress.completeSetupFlagDiagnostics(c, task, queuedMs, elapsed,
+                        provisionedAt, setupCompleteAt);
                     return true;
                 }
 
@@ -67,7 +71,8 @@ final class SetupNetworkGate {
             State.log(c, "Gotowosc " + task + ": timeout 240 s; ponowi JobScheduler");
             return false;
         } finally {
-            DpcProgress.clearSetupFlagDiagnostics(c, task);
+            // Do not cancel the diagnostic on success. Its final summary remains
+            // visible during download and is cleared only when DPC is released.
         }
     }
 
