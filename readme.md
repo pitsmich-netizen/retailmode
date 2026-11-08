@@ -20,10 +20,10 @@ Starszy test automatycznej publikacji istniejących APK również się udał: [c
 ## Status urządzenia
 
 - Wcześniej sprawdzona baza: **DPC 0.9.5 + Helper 0.2.5** — instalacja, przekazanie sterowania, automatyczna konfiguracja Retail Mode i odinstalowanie DPC z potwierdzeniem.
-- Najnowsze źródła: **DPC 0.10.2-ci + Helper 0.2.9** — wersja eksperymentalna, wymagająca testu na Galaxy S26.
+- Najnowsze źródła: **DPC 0.10.3-ci + Helper 0.2.9** — wersja eksperymentalna, wymagająca testu na Galaxy S26.
 - Cicha deinstalacja DPC **nie została osiągnięta**; Android może wyświetlić okno potwierdzenia.
 - Ukrycie ikony Helpera 0.2.9 i pełna stabilność dystrybucji przez RAW wymagają testu S26.
-- Samsung Retail Mode nadal pochodzi z osobnego wydania `rmtest`; jego pobieranie nie jest objęte w pełni nowym pipeline.
+- Samsung Retail Mode to niezmienione APK `rmtest`, ale pobierane przez **GitHub RAW** (34 MB, z SHA-256 i preflightem CI), aby ominąć błędy 504 pobierania z Releases.
 
 ## Bezpieczeństwo
 

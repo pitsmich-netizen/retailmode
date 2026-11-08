@@ -53,3 +53,13 @@ Nie commitować kluczy, haseł ani `release-signing.properties`. Nie publikować
 - `provisioning/RetailHelper-029.apk` — zweryfikowana kopia Helpera 0.2.9.
 
 Nie usuwać bez uprzedniego wycofania powiązanych QR.
+
+## 2026-11-08 — naprawa HTTP 504 dla Retail Mode
+
+Oryginalny plik z wydania `rmtest` został automatycznie skopiowany do `provisioning/RetailMode.apk` po weryfikacji rozmiaru 34 192 143 bajtów i SHA-256 `da5ede9aa02aa278fa82b97caba8eb2e79a4e6fea9bdc5e3b50ebb3e5bc245c4`.
+
+Od DPC 0.10.3-ci zamiast adresu GitHub Releases używamy commit-pinned adresu RAW:
+
+`https://raw.githubusercontent.com/pitsmich-netizen/retailmode/58bed6b59596e1ed82bb2526bbdb202f114a3391/provisioning/RetailMode.apk`
+
+Workflow kompilacji weryfikuje odczyt pliku z tego RAW i jego SHA-256 przed budowaniem APK. Nie należy usuwać `provisioning/RetailMode.apk` ani wykorzystywanego commita z historii repo. Zmiana nie naprawia już zainstalowanych DPC 0.10.2-ci; wymaga nowej kompilacji i konfiguracji testowego telefonu.
