@@ -26,6 +26,7 @@ final class DpcProgress {
     private static final int ID = 10200;
     private static final int RETAIL_ID = 10201;
     private static final int HELPER_ID = 10202;
+    private static final int SETUP_DIAG_ID = 10203;
     private static final String PREF = "retail_progress_100";
     private static final long TOAST_GAP_MS = 4500L;
     private static final long PROGRESS_GAP_MS = 1600L;
@@ -138,6 +139,51 @@ final class DpcProgress {
         }
     }
 
+    /**
+     * Visible experimental diagnostic, limited to the Retail Mode gate.
+     * The parallel Helper job records its own flag transitions to State.log,
+     * but must not overwrite Retail's notification.
+     */
+    static synchronized void setupFlagDiagnostics(Context c, String task,
+            boolean provisioned, boolean finished, long elapsedMs,
+            long provisionedAtMs, long finishedAtMs) {
+        if (!"retail".equals(task) || CleanupFlow.blocked(c)) return;
+        String pending = !provisioned && !finished ? "obie flagi"
+            : !provisioned ? "device_provisioned" : "user_setup_complete";
+        String line = "device_provisioned=" + (provisioned ? 1 : 0)
+            + " | user_setup_complete=" + (finished ? 1 : 0);
+        String detail = "Czekam: " + pending + " | " + (elapsedMs / 1000) + " s"
+            + "\\n" + line
+            + "\\nPierwsze 1: device +" + provisionedAtMs
+            + " ms, user +" + finishedAtMs + " ms";
+        try {
+            NotificationManager nm = c.getSystemService(NotificationManager.class);
+            if (nm == null) return;
+            ensureChannel(nm);
+            if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+            Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
+            builder.setSmallIcon(R.drawable.retail_progress)
+                .setContentTitle("Android Setup — diagnostyka")
+                .setContentText("Oczekuję: " + pending + " (" + (elapsedMs / 1000) + " s)")
+                .setStyle(new Notification.BigTextStyle().bigText(detail))
+                .setOnlyAlertOnce(true).setOngoing(true)
+                .setCategory(Notification.CATEGORY_STATUS).setShowWhen(false);
+            nm.notify(SETUP_DIAG_ID, builder.build());
+        } catch (RuntimeException e) {
+            State.log(c, "Diagnostyka powiadomienia: " + e.getClass().getSimpleName());
+        }
+    }
+
+    static synchronized void clearSetupFlagDiagnostics(Context c, String task) {
+        if (!"retail".equals(task)) return;
+        try {
+            NotificationManager nm = c.getSystemService(NotificationManager.class);
+            if (nm != null) nm.cancel(SETUP_DIAG_ID);
+        } catch (RuntimeException ignored) { }
+    }
+
     private static void notifyStatus(Context c, String message,
                                      boolean downloading, int percent) {
         try {
@@ -201,6 +247,7 @@ final class DpcProgress {
                 nm.cancel(ID);
                 nm.cancel(RETAIL_ID);
                 nm.cancel(HELPER_ID);
+                nm.cancel(SETUP_DIAG_ID);
             }
         } catch (RuntimeException ignored) { }
     }

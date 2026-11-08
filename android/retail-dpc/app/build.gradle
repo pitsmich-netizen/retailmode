@@ -60,8 +60,8 @@ android {
         buildConfigField 'String', 'LOCAL_TEST_RETAIL_PASSWORD', '"' + escapeBuildConfig(testRetailPassword) + '"'
         buildConfigField 'String', 'HELPER_URL', '"' + escapeBuildConfig(helperUrl) + '"'
         buildConfigField 'String', 'HELPER_SHA256', '"' + helperSha256 + '"'
-        versionCode 33
-        versionName '0.10.10-ci-setup-only'
+        versionCode 34
+        versionName '0.10.11-ci-setup-flags-diagnostic'
     }
     buildFeatures {
         buildConfig true

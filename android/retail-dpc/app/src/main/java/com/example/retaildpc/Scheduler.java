@@ -23,6 +23,7 @@ final class Scheduler {
         }
         try {
             int result = js.schedule(job);
+            if (result == JobScheduler.RESULT_SUCCESS) SetupNetworkGate.markQueued(c, "retail");
             State.log(c, "Instalacja Retail zakolejkowana, result=" + result);
             scheduleHelper(c);
         } catch (RuntimeException e) {
@@ -50,6 +51,7 @@ final class Scheduler {
             .build();
         try {
             int result = js.schedule(job);
+            if (result == JobScheduler.RESULT_SUCCESS) SetupNetworkGate.markQueued(c, "helper");
             State.log(c, "Instalacja Helpera zakolejkowana, result=" + result);
         } catch (RuntimeException e) {
             State.log(c, "BŁĄD JobScheduler Helper: " + e.getClass().getSimpleName());

@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-08 — DPC 0.10.11-ci + Helper 0.2.14: diagnostyka opóźnienia flag Setup Wizard
+
+- Bez zmian warunków uruchomienia: nadal wymagane `device_provisioned=1` i `user_setup_complete=1`, dostępność sieci nadzorowana przez JobScheduler (bez dodatkowego testu Internetu).
+- Powiadomienie diagnostyczne na Galaxy S26 pokazuje, która flaga nie jest ustawiona oraz czas oczekiwania; po osiągnięciu gotowości znika, ustępując paskowi pobierania.
+- Logowane są oddzielnie wartości 0/1 flag i czas ich pierwszego wykrycia na 1, a także czas między pierwszym zaplanowaniem jobu i wejściem do bramki.
+- Ograniczono odświeżanie diagnostyki do 2,4 s; nie zapisuje haseł ani danych sieci i nie zmienia niezawodności SHA-256/retry.
+- Bez zmian w Helperze 0.2.14, przekazywaniu Device Owner, potwierdzeniu usunięcia DPC i sprzątaniu.
+- To wersja diagnostyczna. Zachowano stabilny wariant referencyjny 0.10.10-ci.
+
 ## 2026-11-08 — DPC 0.10.10-ci + Helper 0.2.14: szybsza bramka Setup Wizard
 
 - Pobieranie Retail Mode i Helpera czeka tylko na rzeczywiste flagi końca konfiguracji Androida: `device_provisioned` oraz `user_setup_complete`.

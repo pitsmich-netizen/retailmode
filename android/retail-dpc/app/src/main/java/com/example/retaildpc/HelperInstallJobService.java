@@ -25,6 +25,7 @@ public final class HelperInstallJobService extends JobService {
     @Override public boolean onStartJob(JobParameters params) {
         if (CleanupFlow.blocked(this) || !HelperStatus.configured(this)) return false;
         cancelled = false;
+        State.log(this, "Helper: JobScheduler uruchomil HelperInstallJobService");
         new Thread(() -> {
             boolean retry = false;
             File target = new File(getCacheDir(), "RetailHelper-verified.apk");
