@@ -1,15 +1,14 @@
-# Lista kontrolna — testowy build CI
+# Lista kontrolna — Retail Setup All-In-One 0.11.0-ci
 
-- [ ] GitHub Actions `retail-build-from-source.yml` zakończony sukcesem.
-- [ ] W wydaniu `ci-build-<run-id>` są obydwa APK, `SHA256SUMS.txt` i `DEPLOYMENT.txt`.
-- [ ] SHA-256 DPC i Helpera zgodne z manifestem.
-- [ ] Oba pliki są podpisane i mają zgodny certyfikat.
-- [ ] DPC ma poprawny URL oraz SHA-256 zbudowanego Helpera.
-- [ ] Adresy RAW pobierają się prawidłowo przed wygenerowaniem QR.
-- [ ] Samsung Retail Mode APK jest nadal dostępny i pobieralny.
-- [ ] S26: konfiguracja QR Device Owner przechodzi instalację.
-- [ ] S26: DPC instaluje Retail Mode oraz Helpera i przekazuje sterowanie.
-- [ ] S26: DPC zwalnia uprawnienia i usuwa się (może wymagać kliknięcia „Odinstaluj”).
-- [ ] S26: po ręcznym nadaniu Accessibility Helper automatycznie konfiguruje demo.
-- [ ] S26: Accessibility jest wyłączone po rozpoczęciu pobierania, ikona Helpera nie jest widoczna.
-- [ ] Brak pozostawionego Device Ownera i niepożądanych trwałych polityk.
+- [ ] CI publikuje **jeden** podpisany `RetailSetup.apk` wraz z SHA-256.
+- [ ] QR pobiera dokładnie ten APK przez niezmienny URL RAW i weryfikuje checksum.
+- [ ] Galaxy S26: provisioning Device Owner i Wi-Fi przechodzą poprawnie.
+- [ ] Po zakończeniu kreatora Androida wyświetla się **Retail Setup** jako tymczasowy HOME (bez twardego kiosku).
+- [ ] Jeden START inicjuje albo kontynuuje cały proces.
+- [ ] Widoczny jest prawdziwy procent pobierania Retail Mode i bieżący etap.
+- [ ] Po instalacji Retail APK przywracany jest systemowy HOME i zwalniany Device Owner oraz aktywny administrator.
+- [ ] Działa ta sama aplikacja; nie ma Helpera ani pytania o odinstalowanie DPC.
+- [ ] Ręczne włączenie Retail Setup w Dostępności i automatyzacja kraju/partnera/sklepu/hasła/profilu Experience działają.
+- [ ] Po rozpoczęciu pobierania demo Accessibility wyłącza się i znika ikona Retail Setup.
+- [ ] Retail Mode działa po restarcie; nie pozostały trwałe ograniczenia Androida.
+- [ ] Awaryjne przywracanie pulpitu w opcjach zaawansowanych nie blokuje urządzenia.

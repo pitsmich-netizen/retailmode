@@ -1,24 +1,22 @@
-# Retail DPC 0.10.2-ci — eksperymentalny build automatyczny
+# Retail Setup 0.11.0-ci — All-In-One
 
-- Pakiet: `com.example.retaildpc`
-- `versionCode 25`
-- Helper: `com.example.retailhelper` 0.2.9 (versionCode 15)
-- Kompilacja: [workflow Android CI](../../.github/workflows/retail-build-from-source.yml)
+Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 
-## Co robi DPC
+## Instalacja i obsługa Galaxy S26 (urządzenie testowe)
 
-Przyjmuje QR Device Owner, przygotowuje telefon, pobiera i instaluje Samsung Retail Mode i Helpera, przekazuje sterowanie Helperowi i zwalnia uprawnienia Device Ownera przed konfiguracją demo. Próba cichej deinstalacji DPC nadal **nie** działała na S26; system może wymagać potwierdzenia.
+- QR uruchamia provisioning Device Owner i przekazuje lokalne parametry Wi-Fi, sklepu i hasło demo. Dane poufne nie są publikowane w repo.
+- Retail Setup tymczasowo zajmuje ekran HOME, wyświetla ciemny interfejs, bieżące etapy przygotowania i procent pobierania zweryfikowanego APK Samsung Retail Mode.
+- **START** zapamiętuje polecenie nawet jeśli pobieranie jeszcze trwa. Po instalacji, bez dodatkowego Helpera, aplikacja przywraca zwykły HOME, zwalnia Device Owner i administratora i przechodzi do uruchamiania demo.
+- Użytkownik ręcznie zatwierdza usługę Accessibility aplikacji Retail Setup w ustawieniach Androida; aplikacja nie próbuje omijać zgody.
+- Wbudowany automat wybiera kraj, partnera, sklep, hasło i zgodny profil Experience. Po wykryciu realnego początku pobierania demonstracji wyłącza Accessibility i pozostaje bez ikony.
+- Aplikacja nadal jest widoczna w systemowym **Ustawienia → Aplikacje**. Nie jest odinstalowywana.
 
-Poza tym udostępnia testowe komunikaty o postępie i diagnostykę.
+Przycisk **Opcje zaawansowane** zawiera ręczne pola parametrów, ponów, Wi-Fi, Accessibility, logi i awaryjne przywrócenie pulpitu. Nie ma osobnego okna deinstalacji ani instruktażowych Toastów.
 
-## Helper
+## Bezpieczeństwo i ograniczenia
 
-CI najpierw buduje Helpera, wylicza jego SHA-256, a potem ustawia w pliku ignorowanym przez Git `helper-apk.properties` adres RAW z dokładnym SHA commitu. DPC weryfikuje adres, SHA-256 i zgodność z oczekiwanym APK.
+To prototyp do testów na uprawnionym, możliwym do zresetowania Samsungu. Wersja **nie używa Lock Task** (twardego kiosku). Przejęcie tymczasowego HOME i przywrócenie fabrycznego launchera wymagają sprawdzenia na urządzeniu. `clearDeviceOwnerApp()` jest API testowym, przestarzałym i może pozostawić polityki systemowe.
 
-Domyślne ustawienia (przy lokalnym budowaniu bez tego pliku) pochodzą z `helper-apk.defaults.properties`. Nie wpisuj haseł do publicznego repo.
+## Kompilacja
 
-## Testowanie
-
-`DPC 0.10.2-ci` to **nieprzetestowany na telefonie wariant źródłowy**. Po zakończonej kompilacji przeprowadzić kontrolę podpisów, danych provisioning, pobrania wszystkich APK oraz pełny test na Galaxy S26. Wcześniejsza wersja 0.10.1 korzystała z Helpera 0.2.9 przez RAW.
-
-Nie przekazywać Device Ownera Helperowi. Helper po rozpoczęciu pobierania demo ma wyłączyć Dostępność i ukryć ikonę, ale pozostać zainstalowany.
+`gradle -p android/retail-dpc :app:assembleDebug` lub GitHub Actions `retail-build-from-source.yml`. CI publikuje **tylko** `RetailSetup.apk`, SHA-256 i plik deployment z przypiętym adresem RAW. Archiwalne APK Samsung Retail Mode i wydania DPC/Helper nie zostały usunięte, ponieważ starsze QR mogą ich używać.

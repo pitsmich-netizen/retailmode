@@ -1,4 +1,14 @@
-# 0.10.2-ci (experimental source build)
+# Changelog — Retail Setup DPC
+
+## 0.11.0-ci / 2026-11-09
+
+- All-In-One: jeden APK, bez Helpera, wbudowana automatyzacja Experience.
+- Nowy ciemny ekran START, realny postęp pobierania, zwijane testowe opcje.
+- Tymczasowy HOME podczas provisioningu i przywracanie pulpitu przed zwolnieniem Device Ownera.
+- Domyślnie ukryty alias Launchera; dostępność tylko po ręcznej zgodzie, wyłączana po rozpoczęciu pobierania demo.
+- Usunięto nieużywane klasy i oddzielny moduł Helper; archiwalne wydania pozostały dostępne.
+- Wymaga testu na fizycznym urządzeniu.
+
 - Allows immutable commit-pinned Helper APK in trusted GitHub provisioning/ci path; retains signature and sha checks.
 - CI testing only; not tested on S26.
 
