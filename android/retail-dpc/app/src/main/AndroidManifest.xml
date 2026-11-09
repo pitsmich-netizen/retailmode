@@ -8,6 +8,20 @@
         <intent><action android:name="com.samsung.accessibility.installed_service" /></intent>
         <package android:name="com.samsung.rms.retailagent.global"/>
         <package android:name="com.android.settings"/>
+        <!-- Visibility of exact stock packages for post-provisioning audit.
+             No QUERY_ALL_PACKAGES; no unknown packages are modified. -->
+        <package android:name="com.samsung.android.calendar"/>
+        <package android:name="com.sec.android.app.popupcalculator"/>
+        <package android:name="com.sec.android.app.clockpackage"/>
+        <package android:name="com.samsung.android.app.notes"/>
+        <package android:name="com.samsung.android.voc"/>
+        <package android:name="com.samsung.android.bixby.agent"/>
+        <package android:name="com.samsung.android.app.tips"/>
+        <package android:name="com.samsung.android.game.gamehome"/>
+        <package android:name="com.samsung.sree"/>
+        <package android:name="com.facebook.katana"/>
+        <package android:name="com.instagram.android"/>
+        <package android:name="com.spotify.music"/>
     </queries>
     <application android:allowBackup="false" android:label="Retail Setup"
         android:theme="@android:style/Theme.Material.NoActionBar"

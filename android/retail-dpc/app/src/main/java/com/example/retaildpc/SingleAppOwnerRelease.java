@@ -33,6 +33,18 @@ final class SingleAppOwnerRelease {
             if (emergency) RetailHomePolicy.disableHomeAlias(c);
             return true;
         }
+        // Must run before Device Owner relinquishes policy privileges.
+        // Best effort only: failure of a stock app must never block Retail Mode.
+        if (!emergency && dpm.isDeviceOwnerApp(c.getPackageName())) {
+            try {
+                DpcProgress.stage(c, "stock_app_restore",
+                    "Przywracam dostępne aplikacje fabryczne…");
+                StockAppRecovery.restore(c);
+            } catch (RuntimeException ex) {
+                State.log(c, "Przywracanie aplikacji fabrycznych: "
+                    + ex.getClass().getSimpleName());
+            }
+        }
         try{
             if(dpm.isDeviceOwnerApp(c.getPackageName())){
                 RetailHomePolicy.clear(c); // BEFORE clearDeviceOwnerApp()

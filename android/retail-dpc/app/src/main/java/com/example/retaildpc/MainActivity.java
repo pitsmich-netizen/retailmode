@@ -42,6 +42,7 @@ public class MainActivity extends Activity {
     private TextView accessibilityHint;
     private boolean servicePanelUnlocked;
     private Button accessibilityRetry;
+    private TextView stockAppsReport;
     private final Runnable update=new Runnable(){
         @Override public void run(){
             if(isFinishing()||isDestroyed())return;
@@ -125,7 +126,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.6",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.7",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -182,6 +183,14 @@ public class MainActivity extends Activity {
         button(extra,"Zatrzymaj automat",PANEL).setOnClickListener(v->{
             DemoUiBridge.stop(this);refresh();
         });
+        button(extra,"Pokaż raport aplikacji fabrycznych",PANEL).setOnClickListener(v->{
+            boolean visible=stockAppsReport.getVisibility()==View.VISIBLE;
+            stockAppsReport.setVisibility(visible?View.GONE:View.VISIBLE);
+            if(!visible)stockAppsReport.setText(StockAppRecovery.report(this));
+        });
+        stockAppsReport=text(extra,"",12,MUTED,false);
+        stockAppsReport.setTextIsSelectable(true);
+        stockAppsReport.setVisibility(View.GONE);
         button(extra,"Pokaż / ukryj diagnostykę",PANEL).setOnClickListener(v->{
             report.setVisibility(report.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
             refresh();
@@ -192,7 +201,8 @@ public class MainActivity extends Activity {
             ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
             if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("Retail Setup",
                 DpcProgress.lastSetupDiagnostic(this)+"\n"+
-                State.logs(this)+"\n"+DemoUiBridge.logs(this)));
+                State.logs(this)+"\n"+DemoUiBridge.logs(this)
+                    +"\n\n"+StockAppRecovery.report(this)));
         });
         button(extra,"Wyjdź na pulpit Androida",PANEL).setOnClickListener(v -> {
             // Safe at any stage: restore One UI and keep downloading in the background.
@@ -336,7 +346,8 @@ public class MainActivity extends Activity {
             report.setText("Wersja: "+BuildConfig.VERSION_NAME+"\nDevice Owner: "+owner+"\nRetail APK: "+installed+
                 "\n\n"+DpcProgress.lastSetupDiagnostic(this)+
                 "\n\nInstalator:\n"+State.logs(this)+
-                "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this));
+                "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this)
+                +"\n\nAplikacje fabryczne:\n"+StockAppRecovery.report(this));
     }
     @Override protected void onResume(){
         super.onResume();
