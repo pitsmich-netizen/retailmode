@@ -60,6 +60,14 @@
                 <action android:name="android.app.action.PROVISIONING_SUCCESSFUL"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+            <!-- AOSP PackageManager.getLaunchIntentForPackage searches INFO
+                 before LAUNCHER; no launcher icon is required. Samsung's
+                 Settings app may or may not show an Open button. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.INFO"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
         </activity>
         <activity-alias android:name=".HomeActivity" android:targetActivity=".MainActivity"
             android:exported="true" android:enabled="true">

@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     private boolean switchingToReadyTask;
     private long lastReleaseAttemptAt = 0L;
     private TextView accessibilityHint;
+    private boolean servicePanelUnlocked;
     private Button accessibilityRetry;
     private final Runnable update=new Runnable(){
         @Override public void run(){
@@ -67,11 +68,27 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
-        draw();
+        if (DemoUiBridge.completed(this)) {
+            showServicePin();
+        } else {
+            draw();
+        }
         State.log(this,"Retail Setup UI otwarty; wersja " + BuildConfig.VERSION_NAME
             + "; action=" + getIntent().getAction());
         if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))Scheduler.schedule(this);
         refresh();
+    }
+    private void showServicePin() {
+        servicePanelUnlocked = false;
+        start = null;
+        handler.removeCallbacks(update);
+        ServicePanelPin.show(this, () -> {
+            servicePanelUnlocked = true;
+            draw();
+            refresh();
+            handler.removeCallbacks(update);
+            handler.post(update);
+        });
     }
     private int dp(int x){return (int)(x*getResources().getDisplayMetrics().density+0.5f);}
     private GradientDrawable rounded(int color,int radius){
@@ -106,8 +123,11 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP    •    0.11.5",14,BLUE,true);gap(page,14);
-        text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.6",14,BLUE,true);
+        brand.setLetterSpacing(0.12f);
+        gap(page,14);
+        text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
+            "Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
         LinearLayout card=column();card.setBackground(rounded(PANEL,18));
@@ -184,6 +204,18 @@ public class MainActivity extends Activity {
                     "Instalacja może zostać przerwana i wymagany będzie kolejny reset/QR.")
                 .setNegativeButton("Anuluj",null)
                 .setPositiveButton("Zwolnij",(d,w)->releaseAndContinue(true)).show());
+        gap(page,28);
+        View separator = new View(this);
+        separator.setBackgroundColor(Color.rgb(48,62,82));
+        page.addView(separator,new LinearLayout.LayoutParams(-1,dp(1)));
+        gap(page,19);
+        TextView footer = text(page,
+            "TYLKO DO UŻYTKU WEWNĘTRZNEGO\n"
+            + "Autor i opracowanie: Piotr Michalik\n"
+            + "Narzędzie testowe • Nie jest oficjalnym produktem Samsung\n"
+            + "Używaj tylko na urządzeniach, do których masz uprawnienia.\n"
+            + "QR może zawierać poufne dane konfiguracji — nie udostępniaj go.",11,MUTED,false);
+        footer.setLineSpacing(dp(3),1.0f);
         setContentView(scroll);
     }
     private void startPressed(){
@@ -315,5 +347,14 @@ public class MainActivity extends Activity {
         // Never disable a system HOME alias here: onPause also runs when
         // Accessibility Settings comes to foreground.
         super.onPause();
+    }
+    @Override protected void onStop(){
+        handler.removeCallbacks(update);
+        // After the demo has completed, require PIN again on every
+        // exit from the administrative panel, including HOME / Recents.
+        if (DemoUiBridge.completed(this) && servicePanelUnlocked) {
+            showServicePin();
+        }
+        super.onStop();
     }
 }

@@ -32,8 +32,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 43
-        versionName '0.11.5-ci-accessibility-stable-settings'
+        versionCode 44
+        versionName '0.11.6-ci-service-panel-pin-info'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
