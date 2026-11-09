@@ -2,6 +2,12 @@
 
 Projekt: **DPC Wrapper → Retail Helper → Samsung Retail Mode**, uruchamiany przez QR Device Owner na autoryzowanym urządzeniu testowym.
 
+## Retail Setup All-In-One (0.11.0-ci — test)
+
+Jeden APK DPC zawierający własną usługę automatyzacji oraz ciemny interfejs START / Opcje zaawansowane. W trakcie konfiguracji jest tymczasowym ekranem HOME; przed utratą Device Ownera przywraca systemowy HOME. Nie wymaga instalowania drugiego Helpera. Użytkownik ręcznie zatwierdza jedynie zgodę Accessibility.
+
+Wcześniejsze wydania i RAW APK pozostają dostępne do rollbacku; nie usuwać ich bez weryfikacji wszystkich używanych kodów QR.
+
 ## Aktualna struktura
 
 - `android/retail-dpc/` — źródła Wrappera, który przygotowuje telefon, pobiera pozostałe aplikacje i zwalnia Device Ownera przed uruchomieniem demo.

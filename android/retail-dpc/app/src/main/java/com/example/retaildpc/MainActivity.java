@@ -2,354 +2,248 @@ package com.example.retaildpc;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.admin.DevicePolicyManager;
-import android.content.Intent;
-import android.net.Uri;
-import android.app.job.JobScheduler;
-import android.view.View;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.text.InputType;
-import android.text.Editable;
+import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
-import java.util.Arrays;
+import com.example.retaildpc.demo.DemoUiBridge;
 
-/** TEST ONLY: Helper handoff can release Device Owner and request uninstallation. */
+/** A single dark screen instead of a collection of instructions and Toasts. */
 public final class MainActivity extends Activity {
-    private TextView status;
-    private EditText countryInput, partnerInput, siteInput, passwordInput;
-    private CheckBox fullMode;
-    private String cleanupReport = "Najpierw kliknij: Sprawdz gotowosc cleanup.";
-
-    @Override public void onCreate(Bundle state) {
-        super.onCreate(state);
-        ScrollView scroll = new ScrollView(this);
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(28, 32, 28, 36);
-        scroll.addView(layout);
-        TextView title = new TextView(this);
-        title.setText("RETAIL DPC LAB " + BuildConfig.VERSION_NAME + "\nInstalacja + przekazanie Helperowi");
-        title.setTextSize(20f);
-        layout.addView(title);
-        countryInput = field(layout, "Kraj", StoreSelection.country(this));
-        partnerInput = field(layout, "Partner", StoreSelection.partner(this));
-        String site = State.site(this);
-        if (site.equalsIgnoreCase("BRAK") || site.equalsIgnoreCase("TEST001") || site.trim().isEmpty())
-            site = StoreSelection.site(this);
-        siteInput = field(layout, "Site ID", site);
-        passwordInput = field(layout, "Hasło Retail Mode (opcjonalnie: nadpisuje lokalny sekret z kompilacji)", "");
-        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        passwordInput.setSingleLine(true);
-        fullMode = new CheckBox(this);
-        fullMode.setText("TRYB PEŁNY: hasło → CONFIRM → profil Experience → końcowy CONFIRM");
-        fullMode.setChecked(false);
-        layout.addView(fullMode);
-        TextView initialResult = new TextView(this);
-        initialResult.setText("Konfiguracja początkowa: lokalizacja z callbacku DO; uprawnienia po instalacji Retail APK.");
-        layout.addView(initialResult);
-        Button checkInitial = button(layout, "0.9.6 LAB: Włącz lokalizację i sprawdź uprawnienia Retail Mode");
-        checkInitial.setOnClickListener(v -> initialResult.setText(
-            InitialDeviceSetup.enableLocation(this) + "\n" +
-            InitialDeviceSetup.grantRetailLocationPermissions(this)));
-        Button accessibility = button(layout, "1. Dostępność — włącz usługę Retail DPC 0.9.6");
-        accessibility.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
-        Button start = button(layout, "2. START: rozpoznaj PROCEED/CLOSE → kraj → partner → sklep");
-        start.setOnClickListener(v -> {
-            boolean full = fullMode.isChecked();
-            if (full && passwordInput.length() == 0 && BuildConfig.LOCAL_TEST_RETAIL_PASSWORD.isEmpty()) {
-                Toast.makeText(this, "Brak lokalnego hasła Retail Mode (wpisz je w aplikacji)", Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (full) {
-                new AlertDialog.Builder(this)
-                    .setTitle("Aktywacja Retail Mode")
-                    .setMessage("Tryb PEŁNY może zatwierdzić konfigurację i aktywować tryb ekspozycyjny. " +
-                        "Może to spowodować ograniczenia w telefonie. Uruchomić wyłącznie na uprawnionym urządzeniu testowym?")
-                    .setNegativeButton("Anuluj", (d, which) -> {})
-                    .setPositiveButton("Tak, aktywuj", (d, which) -> begin(true))
-                    .show();
-            } else begin(false);
-        });
-        Button resume = button(layout, "WZNÓW po ręcznej autoryzacji embargo / dodatkowej zgody");
-        resume.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                .setTitle("Wznowienie po autoryzacji")
-                .setMessage("Użyj tylko wtedy, gdy uprawniony pracownik zakończył wymagane potwierdzenie, a ekran Retail Mode przeszedł dalej. Program nie wprowadzi drugiego hasła.")
-                .setNegativeButton("Anuluj", (d, w) -> {})
-                .setPositiveButton("Wznów", (d, w) -> {
-                    AutomationState.resumeAfterAuthorization(this);
-                    launchDemo();
-                    refresh();
-                }).show();
-        });
-        Button stop = button(layout, "STOP automatyzacji / wyczyść hasło z pamięci");
-        stop.setOnClickListener(v -> {
-            AutomationState.stop(this, "Ręcznie zatrzymane przez użytkownika");
-            passwordInput.getText().clear();
+    private static final int BG=Color.rgb(9,15,28),PANEL=Color.rgb(23,34,53);
+    private static final int WHITE=Color.rgb(240,245,250),MUTED=Color.rgb(164,182,201);
+    private static final int BLUE=Color.rgb(63,121,240);
+    private static final String PREF="retail_setup_one_button_011";
+    private final Handler handler=new Handler(Looper.getMainLooper());
+    private TextView title,stage,subtitle,progressInfo,report,storeInfo;
+    private ProgressBar progress;
+    private Button start,options;
+    private EditText model,site,password;
+    private LinearLayout extra;
+    private boolean busy,optionsShown;
+    private final Runnable update=new Runnable(){
+        @Override public void run(){
+            if(isFinishing()||isDestroyed())return;
             refresh();
-        });
-        Button open = button(layout, "Uruchom Retail Mode ręcznie");
-        open.setOnClickListener(v -> launchDemo());
-        Button refresh = button(layout, "Odśwież diagnostykę");
-        refresh.setOnClickListener(v -> refresh());
-        Button retry = button(layout, "Ponów instalację demo (tylko gdy brak APK)");
-        retry.setOnClickListener(v -> {
-            if (CleanupFlow.blocked(this) || !CleanupFlow.isOwner(this)) {
-                Toast.makeText(this, "Instalator niedostępny po rozpoczęciu zwolnienia Device Owner", Toast.LENGTH_LONG).show();
-                return;
-            }
-            State.installed(this, false); Scheduler.schedule(this); refresh();
-        });
-        TextView helperTitle = new TextView(this);
-        helperTitle.setText("\nHELPER — INSTALACJA I PRZEKAZANIE DANYCH\n" +
-            "Zainstaluj Helpera przez Device Owner przed zwolnieniem administratora. " +
-            "Nie włączamy Accessibility automatycznie.");
-        helperTitle.setTextSize(16f);
-        layout.addView(helperTitle);
-        TextView helperConfigInfo = new TextView(this);
-        helperConfigInfo.setText("Wersja Wrappera: " + BuildConfig.VERSION_NAME +
-            "\nInstalacja Helpera: " + (HelperStatus.configured(this) ? "SKONFIGUROWANA" : "NIE SKONFIGUROWANA") +
-            "\nHelper URL: " + HelperConfig.url(this) +
-            "\nHelper SHA-256: " + HelperConfig.sha256(this));
-        helperConfigInfo.setTextSize(12f);
-        layout.addView(helperConfigInfo);
-        Button helperRetry = button(layout, "Helper: ponów instalację (gdy brak APK)");
-        helperRetry.setOnClickListener(v -> {
-            if (!CleanupFlow.isOwner(this) || CleanupFlow.blocked(this)) {
-                Toast.makeText(this, "Wymagany aktywny Device Owner", Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (!HelperStatus.configured(this)) {
-                Toast.makeText(this, "Brak poprawnej konfiguracji Helpera", Toast.LENGTH_LONG).show();
-                return;
-            }
-            Scheduler.scheduleHelper(this);
-            refresh();
-        });
-        Button handoff = button(layout, "Helper: przekaż dane sklepu i otwórz Helpera");
-        handoff.setOnClickListener(v -> {
-            if (!HelperStatus.installed(this)) {
-                Toast.makeText(this, "Najpierw zainstaluj Retail Helper", Toast.LENGTH_LONG).show();
-                return;
-            }
-            String country = countryInput.getText().toString().trim();
-            String partner = partnerInput.getText().toString().trim();
-            String siteId = siteInput.getText().toString().trim();
-            if (!siteId.matches("[A-Za-z0-9_-]{4,40}") || partner.isEmpty() || country.isEmpty() ||
-                    partner.length() > 80 || country.length() > 80) {
-                Toast.makeText(this, "Sprawdź dane kraju, partnera i Site ID", Toast.LENGTH_LONG).show();
-                return;
-            }
-            // Signed handoff is required before releasing Device Owner.
-            if (!HelperHandoff.launchManual(this, country, partner, siteId)) {
-                Toast.makeText(this, "Nie mogę przekazać Helperowi — sprawdź Device Owner i instalację", Toast.LENGTH_LONG).show();
-            }
-        });
-        TextView cleanupTitle = new TextView(this);
-        cleanupTitle.setText("\nCLEANUP — TYLKO DIAGNOSTYKA\nBez usuwania aplikacji, resetu i zmiany Device Owner");
-        cleanupTitle.setTextSize(16f);
-        layout.addView(cleanupTitle);
-        TextView cleanupStatus = new TextView(this);
-        cleanupStatus.setText("Kliknij ponizszy przycisk. Raport nie zawiera hasel.");
-        cleanupStatus.setTextSize(13f);
-        layout.addView(cleanupStatus);
-        Button inspectCleanup = button(layout, "Sprawdz gotowosc przekazania Device Owner");
-        inspectCleanup.setOnClickListener(v -> {
-            cleanupReport = CleanupReadiness.check(this);
-            cleanupStatus.setText(cleanupReport);
-        });
-        Button copyCleanup = button(layout, "Kopiuj raport cleanup (bez hasel)");
-        copyCleanup.setOnClickListener(v -> {
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            if (clipboard != null) {
-                clipboard.setPrimaryClip(ClipData.newPlainText("Retail DPC Cleanup Readiness", cleanupReport));
-                Toast.makeText(this, "Raport skopiowany", Toast.LENGTH_SHORT).show();
-            }
-        });
-        TextView testTitle = new TextView(this);
-        testTitle.setText("\nLAB 0.9.6 — USTAWIENIA SYSTEMOWE I ZWOLNIENIE DEVICE OWNER\n" +
-            "UWAGA: zwolnienie Device Owner jest NIEODWRACALNE bez nowego provisioningu. " +
-            "Metoda clearDeviceOwnerApp() jest przeznaczona wyłącznie do testów.");
-        testTitle.setTextSize(16f);
-        layout.addView(testTitle);
-        TextView releaseReport = new TextView(this);
-        releaseReport.setTextSize(13f);
-        releaseReport.setText("Najpierw sprawdź stan urządzenia.");
-        layout.addView(releaseReport);
-        Button snapshot = button(layout, "A. Sprawdź status systemu, Retail Mode i aplikacji");
-        snapshot.setOnClickListener(v -> releaseReport.setText(CleanupFlow.snapshot(this)));
-        Button restore = button(layout, "B. Przywróć dostępne fabryczne aplikacje z ikonami");
-        restore.setOnClickListener(v -> new AlertDialog.Builder(this)
-            .setTitle("Przywrócenie fabrycznych aplikacji")
-            .setMessage("Android spróbuje przywrócić aplikacje obecne w obrazie fabrycznym Samsunga. " +
-                "Nie pobierze z Internetu programów brakujących w ROM. Kontynuować na telefonie testowym?")
-            .setNegativeButton("Anuluj", (d,w) -> {})
-            .setPositiveButton("Przywróć", (d,w) -> {
-                String result = CleanupFlow.restoreLauncherSystemApps(this);
-                releaseReport.setText(result + "\n\n" + CleanupFlow.snapshot(this));
-            }).show());
-        CheckBox checkedRetail = new CheckBox(this);
-        checkedRetail.setText("Sprawdziłem: Retail Mode jest zainstalowany i uruchamia się.");
-        layout.addView(checkedRetail);
-        CheckBox checkedApps = new CheckBox(this);
-        checkedApps.setText("Sprawdziłem podstawowe aplikacje i Wi-Fi po ich przywróceniu.");
-        layout.addView(checkedApps);
-        CheckBox checkedReset = new CheckBox(this);
-        checkedReset.setText("Akceptuję ryzyko resetu fabrycznego i brak możliwości cofnięcia Device Owner bez nowego provisioningu.");
-        layout.addView(checkedReset);
-        TextView phraseLabel = new TextView(this);
-        phraseLabel.setText("Aby odblokować eksperymentalne zwolnienie, wpisz: ZWOLNIJ OWNER");
-        layout.addView(phraseLabel);
-        EditText phrase = new EditText(this);
-        phrase.setSingleLine(true);
-        phrase.setHint("ZWOLNIJ OWNER");
-        layout.addView(phrase);
-        Button release = button(layout, "C. LAB: ZWOLNIJ DEVICE OWNER (nie usuwa APK)");
-        release.setOnClickListener(v -> {
-            if (!checkedRetail.isChecked() || !checkedApps.isChecked() || !checkedReset.isChecked() ||
-                    !CleanupFlow.CONFIRM_TEXT.equals(phrase.getText().toString().trim())) {
-                Toast.makeText(this, "Zaznacz trzy potwierdzenia i przepisz wymagane hasło kontrolne", Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (!CleanupFlow.isOwner(this)) {
-                Toast.makeText(this, "Wrapper nie jest już Device Owner", Toast.LENGTH_LONG).show();
-                releaseReport.setText(CleanupFlow.snapshot(this));
-                return;
-            }
-            if (!CleanupFlow.retailInstalled(this) || AutomationState.active(this)) {
-                Toast.makeText(this, "Retail musi być zainstalowany, a automat zatrzymany", Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (HelperStatus.configured(this) && !HelperStatus.installed(this)) {
-                Toast.makeText(this, "Najpierw zainstaluj Helpera — nie zwalniaj Device Owner", Toast.LENGTH_LONG).show();
-                return;
-            }
-            new AlertDialog.Builder(this)
-                .setTitle("OSTATECZNE POTWIERDZENIE — TEST LAB")
-                .setMessage("To trwale zwolni Device Owner testowego Wrappera i może pozostawić polityki w systemie. " +
-                    "Po operacji nie wykonamy provisioningu ponownie bez resetu. " +
-                    "Retail Mode NIE przejmie automatycznie Device Owner. " +
-                    "Żaden APK nie zostanie odinstalowany. Wykonać test?")
-                .setNegativeButton("NIE — wróć", (d,w) -> {})
-                .setPositiveButton("TAK — ZWOLNIJ", (d,w) -> {
-                    releaseReport.setText(CleanupFlow.releaseTest(this) + "\n\n" + CleanupFlow.snapshot(this));
-                    phrase.getText().clear();
-                    checkedRetail.setChecked(false);
-                    checkedApps.setChecked(false);
-                    checkedReset.setChecked(false);
-                    refresh();
-                }).show();
-        });
-        Button deactivate = button(layout, "D. Po zwolnieniu: wyłącz starego Device Administrator Wrappera");
-        deactivate.setOnClickListener(v -> new AlertDialog.Builder(this)
-            .setTitle("Wyłączenie administratora Wrappera")
-            .setMessage("Tylko jeżeli raport pokazuje Device Owner: NIE, a Retail Mode działa. Kontynuować?")
-            .setNegativeButton("Anuluj", (d,w)->{})
-            .setPositiveButton("Wyłącz", (d,w) -> releaseReport.setText(
-                CleanupFlow.deactivateAdminAfterRelease(this) + "\n\n" + CleanupFlow.snapshot(this)))
-            .show());
-        Button appDetails = button(layout, "E. Otwórz ustawienia Wrappera (ręczna deinstalacja)");
-        appDetails.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + getPackageName()));
-            startActivity(intent);
-        });
-        Button copyRelease = button(layout, "Kopiuj raport diagnostyczny (bez hasła)");
-        copyRelease.setOnClickListener(v -> {
-            ClipboardManager clipboard = getSystemService(ClipboardManager.class);
-            if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText(
-                "Retail DPC 0.9.3 — raport", CleanupFlow.snapshot(this)));
-            Toast.makeText(this, "Raport skopiowany", Toast.LENGTH_SHORT).show();
-        });
-        status = new TextView(this);
-        status.setTextSize(14f);
-        layout.addView(status);
-        setContentView(scroll);
+            if(pressed()&&State.installed(MainActivity.this)
+                    &&!SingleAppOwnerRelease.released(MainActivity.this)&&!busy)
+                releaseAndContinue(false);
+            handler.postDelayed(this,850);
+        }
+    };
+    @Override public void onCreate(Bundle b){
+        super.onCreate(b);
+        getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
+        draw();
+        if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))Scheduler.schedule(this);
         refresh();
     }
-    private void begin(boolean full) {
-        char[] secret = null;
-        try {
-            if (full) {
-                Editable e = passwordInput.getText();
-                if (e.length() > 0) {
-                    secret = new char[e.length()];
-                    e.getChars(0, e.length(), secret, 0);
-                } else {
-                    // Sekret do TESTU pochodzi z nieśledzonego pliku lokalnego; w APK można go odtworzyć.
-                    secret = BuildConfig.LOCAL_TEST_RETAIL_PASSWORD.toCharArray();
-                }
-            }
-            AutomationState.start(this, countryInput.getText().toString(),
-                    partnerInput.getText().toString(), siteInput.getText().toString(), full);
-            SecretMemory.set(secret);
-            passwordInput.getText().clear();
+    private int dp(int x){return (int)(x*getResources().getDisplayMetrics().density+0.5f);}
+    private GradientDrawable rounded(int color,int radius){
+        GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;
+    }
+    private LinearLayout column(){
+        LinearLayout x=new LinearLayout(this);x.setOrientation(LinearLayout.VERTICAL);return x;
+    }
+    private void gap(LinearLayout x,int height){
+        x.addView(new View(this),new LinearLayout.LayoutParams(1,dp(height)));
+    }
+    private TextView text(LinearLayout p,String label,int size,int color,boolean bold){
+        TextView t=new TextView(this);t.setText(label);t.setTextSize(size);t.setTextColor(color);
+        if(bold)t.setTypeface(null,Typeface.BOLD);
+        p.addView(t);return t;
+    }
+    private Button button(LinearLayout p,String value,int color){
+        Button b=new Button(this);b.setText(value);b.setAllCaps(false);
+        b.setTextColor(WHITE);b.setTextSize(15);b.setBackground(rounded(color,14));
+        LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(-1,dp(52));
+        layout.topMargin=dp(11);p.addView(b,layout);return b;
+    }
+    private EditText field(LinearLayout p,String hint,String value,boolean secret){
+        EditText e=new EditText(this);e.setHint(hint);e.setText(value);
+        e.setTextColor(WHITE);e.setHintTextColor(MUTED);e.setSingleLine(true);
+        if(secret)e.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        p.addView(e,new LinearLayout.LayoutParams(-1,dp(52)));
+        return e;
+    }
+    private void draw(){
+        ScrollView scroll=new ScrollView(this);
+        scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
+        LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
+        scroll.addView(page);
+        text(page,"RETAIL  /  SETUP",14,BLUE,true);gap(page,14);
+        text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
+        subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
+        gap(page,25);
+        LinearLayout card=column();card.setBackground(rounded(PANEL,18));
+        card.setPadding(dp(18),dp(20),dp(18),dp(20));
+        page.addView(card,new LinearLayout.LayoutParams(-1,-2));
+        title=text(card,"Sprawdzam telefon…",20,WHITE,true);gap(card,12);
+        stage=text(card,"Uruchamiam konfigurację",14,MUTED,false);
+        gap(card,17);
+        progress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        progress.setMax(100);progress.setProgressTintList(ColorStateList.valueOf(BLUE));
+        card.addView(progress,new LinearLayout.LayoutParams(-1,dp(7)));
+        gap(card,11);
+        progressInfo=text(card,"",12,MUTED,false);
+        gap(page,21);
+        storeInfo=text(page,"",13,MUTED,false);gap(page,10);
+        start=button(page,"START",BLUE);start.setOnClickListener(v->startPressed());
+        gap(page,13);
+        options=button(page,"Opcje zaawansowane  ▾",PANEL);
+        options.setOnClickListener(v->{
+            optionsShown=!optionsShown;extra.setVisibility(optionsShown?View.VISIBLE:View.GONE);
+            options.setText(optionsShown?"Ukryj opcje zaawansowane  ▴":"Opcje zaawansowane  ▾");
+        });
+        extra=column();extra.setVisibility(View.GONE);
+        extra.setPadding(dp(8),dp(15),dp(8),dp(7));page.addView(extra);
+        text(extra,"Parametry demo",16,WHITE,true);gap(extra,7);
+        model=field(extra,"Model telefonu",DemoUiBridge.detectModel(this),false);
+        site=field(extra,"Site ID",StoreSelection.site(this),false);
+        password=field(extra,"Hasło Retail Mode (gdy brak w QR)","",true);
+        button(extra,"Ponów pobieranie Retail Mode",PANEL).setOnClickListener(v->{
+            if(!SingleAppOwnerRelease.isOwner(this))return;
+            State.installed(this,false);Scheduler.schedule(this);refresh();
+        });
+        button(extra,"Ustawienia Wi-Fi",PANEL).setOnClickListener(v->
+            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS)));
+        button(extra,"Ustawienia Dostępności",PANEL).setOnClickListener(v->
+            DemoUiBridge.openAccessibility(this));
+        button(extra,"Zatrzymaj automat",PANEL).setOnClickListener(v->{
+            DemoUiBridge.stop(this);refresh();
+        });
+        button(extra,"Pokaż / ukryj diagnostykę",PANEL).setOnClickListener(v->{
+            report.setVisibility(report.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
             refresh();
-            launchDemo();
-        } catch (IllegalArgumentException e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-        } finally {
-            if (secret != null) Arrays.fill(secret, '\0');
+        });
+        report=text(extra,"",12,MUTED,false);report.setTextIsSelectable(true);
+        report.setVisibility(View.GONE);
+        button(extra,"Kopiuj raport",PANEL).setOnClickListener(v->{
+            ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+            if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("Retail Setup",
+                DpcProgress.lastSetupDiagnostic(this)+"\n"+
+                State.logs(this)+"\n"+DemoUiBridge.logs(this)));
+        });
+        button(extra,"Awaryjnie przywróć pulpit Androida",PANEL).setOnClickListener(v->
+            new AlertDialog.Builder(this)
+                .setTitle("Wyjście awaryjne")
+                .setMessage("Zwolnić Device Owner i przywrócić pulpit? " +
+                    "To kończy możliwość instalacji jako administrator bez nowego QR.")
+                .setNegativeButton("Anuluj",null)
+                .setPositiveButton("Przywróć",(d,w)->releaseAndContinue(true)).show());
+        setContentView(scroll);
+    }
+    private boolean pressed(){
+        return getSharedPreferences(PREF,MODE_PRIVATE).getBoolean("start",false);
+    }
+    private void markPressed(boolean value){
+        getSharedPreferences(PREF,MODE_PRIVATE).edit().putBoolean("start",value).commit();
+    }
+    private void startPressed(){
+        if(DemoUiBridge.completed(this))return;
+        markPressed(true);
+        if(!SingleAppOwnerRelease.released(this)){
+            if(!State.installed(this))Scheduler.schedule(this);
+            else releaseAndContinue(false);
+        }else continueDemo();
+        refresh();
+    }
+    private void releaseAndContinue(boolean emergency){
+        if(busy)return;
+        busy=true;refresh();
+        new Thread(()->{
+            boolean success=SingleAppOwnerRelease.release(getApplicationContext(),emergency);
+            runOnUiThread(()->{
+                busy=false;refresh();
+                if(emergency){
+                    if(success){
+                        markPressed(false);
+                        Intent home=new Intent(Intent.ACTION_MAIN);
+                        home.addCategory(Intent.CATEGORY_HOME);
+                        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(home);
+                    }else title.setText("Błąd przywrócenia pulpitu — zobacz diagnostykę");
+                }else if(success)continueDemo();
+                else title.setText("Nie udało się zwolnić DPC — zobacz diagnostykę");
+            });
+        },"retail-release-owner").start();
+    }
+    private void continueDemo(){
+        if(!SingleAppOwnerRelease.released(this)||DemoUiBridge.completed(this))return;
+        String secret=QrRetailCredential.read(this);
+        if((secret==null||secret.isEmpty())&&password.length()>0)
+            secret=password.getText().toString();
+        QrRetailCredential.clear(this);password.getText().clear();
+        try{
+            DemoUiBridge.prepare(this,model.getText().toString(),
+                StoreSelection.country(this),StoreSelection.partner(this),
+                site.getText().toString(),secret);
+        }catch(IllegalArgumentException e){
+            title.setText(e.getMessage());optionsShown=true;
+            extra.setVisibility(View.VISIBLE);options.setText("Ukryj opcje zaawansowane  ▴");
         }
+        refresh();
     }
-    private EditText field(LinearLayout box, String hint, String defaultValue) {
-        TextView label = new TextView(this);
-        label.setText("\n" + hint);
-        box.addView(label);
-        EditText input = new EditText(this);
-        input.setSingleLine(true);
-        input.setText(defaultValue);
-        box.addView(input);
-        return input;
+    private void refresh(){
+        boolean installed=State.installed(this);
+        boolean owner=SingleAppOwnerRelease.isOwner(this);
+        boolean released=SingleAppOwnerRelease.released(this);
+        boolean done=DemoUiBridge.completed(this);
+        boolean active=DemoUiBridge.active(this);
+        boolean waiting=DemoUiBridge.status(this).startsWith("Włącz Retail Setup");
+        if(done)title.setText("Demo gotowe");
+        else if(active)title.setText("Konfiguruję Retail Mode");
+        else if(waiting)title.setText("Włącz usługę Dostępności");
+        else if(released)title.setText("Gotowy do uruchomienia demo");
+        else if(installed)title.setText("Retail Mode zainstalowany");
+        else if(owner)title.setText("Przygotowuję Retail Mode");
+        else title.setText("Urządzenie jest konfigurowane");
+        stage.setText(owner&&!installed?DpcProgress.currentStage(this):
+            !released?"Kończę przygotowanie urządzenia":DemoUiBridge.status(this));
+        int percent=owner&&!installed?DpcProgress.retailPercent(this):100;
+        if(percent<0)progress.setIndeterminate(true);
+        else{progress.setIndeterminate(false);progress.setProgress(percent);}
+        progressInfo.setText(owner&&!installed?
+            percent<0?"Oczekuję na pobranie APK":"Pobieranie APK  •  "+percent+"%":
+            done?"Zakończono":installed?"APK zainstalowane":"");
+        storeInfo.setText("Model: "+DemoUiBridge.detectModel(this)+
+            "     Sklep: "+StoreSelection.site(this));
+        if(done){start.setText("GOTOWE");start.setEnabled(false);}
+        else if(busy){start.setText("PRZYGOTOWUJĘ…");start.setEnabled(false);}
+        else if(pressed()&&!released){start.setText(installed?
+                "ZWALNIAM ADMINISTRATORA…":"PRZYGOTOWUJĘ…");start.setEnabled(false);}
+        else if(released&&(active||waiting)){
+            start.setText("TRWA KONFIGURACJA DEMO");start.setEnabled(false);
+        }else{start.setText("START");start.setEnabled(true);}
+        if(report.getVisibility()==View.VISIBLE)
+            report.setText("Device Owner: "+owner+"\nRetail APK: "+installed+
+                "\n\n"+DpcProgress.lastSetupDiagnostic(this)+
+                "\n\nInstalator:\n"+State.logs(this)+
+                "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this));
     }
-    private Button button(LinearLayout box, String name) {
-        Button button = new Button(this);
-        button.setText(name);
-        box.addView(button);
-        return button;
-    }
-    private void launchDemo() {
-        String target = State.pkg(this);
-        if (target == null || target.isEmpty()) target = "com.samsung.rms.retailagent.global";
-        Intent i = getPackageManager().getLaunchIntentForPackage(target);
-        if (i != null) startActivity(i);
-        else Toast.makeText(this, "Nie znaleziono Retail Mode: " + target, Toast.LENGTH_LONG).show();
-    }
-    @Override protected void onResume() {
+    @Override protected void onResume(){
         super.onResume();
-        if (status != null) {
-            refresh();
-            HelperHandoff.launchAuto(this);
-        }
+        if(start==null)return;
+        DemoUiBridge.onResume(this);
+        handler.removeCallbacks(update);handler.post(update);
     }
-    private void refresh() {
-        DevicePolicyManager dpm = getSystemService(DevicePolicyManager.class);
-        boolean owner = dpm != null && dpm.isDeviceOwnerApp(getPackageName());
-        String step = AutomationState.active(this) ? "TRWA (etap " + AutomationState.phase(this) + ")"
-            : AutomationState.phase(this) == AutomationState.DONE ? "KOŃCOWE CONFIRM WYSŁANE / SPRAWDŹ AKTYWACJĘ" :
-              AutomationState.phase(this) == AutomationState.EMBARGO_PAUSED ? "PAUZA: DODATKOWA AUTORYZACJA" : "STOP";
-        status.setText("\nDevice Owner: " + (owner ? "TAK" : "NIE") +
-            "\nRetail APK: " + (State.installed(this) ? "ZAINSTALOWANE" : "niepotwierdzone") +
-            "\nHelper: " + (HelperStatus.installed(this) ? "ZAINSTALOWANY" :
-                (HelperStatus.configured(this) ? "BRAK / oczekuje na instalację" : "NIE SKONFIGUROWANY")) +
-            "\nParametr QR Site ID: " + State.site(this) +
-            "\nPartner QR: " + StoreSelection.partner(this) +
-            "\n\nAUTOMAT: " + step + "\n" + AutomationState.info(this) +
-            "\n\nLog automatu:" + AutomationState.logs(this) +
-            "\n\nDIAGNOSTYKA STARTU:\n" + DpcProgress.lastSetupDiagnostic(this) +
-            "\n\nLog instalatora:" + State.logs(this) +
-            "\n\nLokalny sekret kompilacji: " + (!BuildConfig.LOCAL_TEST_RETAIL_PASSWORD.isEmpty() ? "TAK (test; odtwarzalny z APK)" : "BRAK") +
-            "\n\nTRYB CLEANUP: " + (CleanupFlow.blocked(this) ? "INSTALATOR ZABLOKOWANY" : "nieuruchomiony") +
-            "\n\nUWAGA: w trakcie pracy hasło nie jest logowane ani zapisywane w SharedPreferences. " +
-            "Hasło embargo wymaga osobnej ręcznej autoryzacji. Nie usuwa Device Owner.");
+    @Override protected void onPause(){
+        handler.removeCallbacks(update);super.onPause();
     }
 }

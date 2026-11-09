@@ -1,0 +1,68 @@
+package com.example.retaildpc;
+import android.app.admin.DevicePolicyManager;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.pm.PackageManager;
+/**
+ * After actual Retail APK installation, drop DO and admin while keeping the
+ * very same app for the user-consented Accessibility demo automation.
+ */
+final class SingleAppOwnerRelease {
+    private static final String P="retail_all_in_one_release_011";
+    private SingleAppOwnerRelease(){}
+    static boolean blocked(Context c){
+        return c.getSharedPreferences(P,Context.MODE_PRIVATE)
+            .getBoolean("release_prepared",false);
+    }
+    static boolean isOwner(Context c){
+        DevicePolicyManager dpm=c.getSystemService(DevicePolicyManager.class);
+        return dpm!=null&&dpm.isDeviceOwnerApp(c.getPackageName());
+    }
+    static boolean released(Context c){
+        DevicePolicyManager dpm=c.getSystemService(DevicePolicyManager.class);
+        return dpm!=null&&!dpm.isDeviceOwnerApp(c.getPackageName())&&
+            !dpm.isAdminActive(new ComponentName(c,AdminReceiver.class));
+    }
+    static synchronized boolean release(Context c,boolean emergency){
+        if(!emergency&&!State.installed(c))return false;
+        DevicePolicyManager dpm=c.getSystemService(DevicePolicyManager.class);
+        if(dpm==null)return false;
+        ComponentName admin=new ComponentName(c,AdminReceiver.class);
+        if(released(c))return true;
+        try{
+            if(dpm.isDeviceOwnerApp(c.getPackageName())){
+                RetailHomePolicy.clear(c); // BEFORE clearDeviceOwnerApp()
+                c.getSharedPreferences(P,Context.MODE_PRIVATE).edit()
+                    .putBoolean("release_prepared",true).commit();
+                JobScheduler js=c.getSystemService(JobScheduler.class);
+                if(js!=null)js.cancel(Constants.INSTALL_JOB_ID);
+                dpm.clearDeviceOwnerApp(c.getPackageName());
+            }
+            if(!dpm.isDeviceOwnerApp(c.getPackageName())&&dpm.isAdminActive(admin))
+                dpm.removeActiveAdmin(admin);
+            if(!released(c)){
+                State.log(c,"Nie udało się zwolnić uprawnień administratora");
+                return false;
+            }
+            disable(c,"HomeActivity");
+            disable(c,"BootReceiver");
+            DpcProgress.clear(c);
+            State.log(c,"DPC bez Device Owner, pakiet nadal zainstalowany");
+            return true;
+        }catch(RuntimeException e){
+            State.log(c,"Zwolnienie DPC: "+e.getClass().getSimpleName());
+            return false;
+        }
+    }
+    private static void disable(Context c,String suffix){
+        try{
+            c.getPackageManager().setComponentEnabledSetting(
+                new ComponentName(c.getPackageName(),c.getPackageName()+"."+suffix),
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
+        }catch(RuntimeException e){
+            State.log(c,"Nie ukryto "+suffix+": "+e.getClass().getSimpleName());
+        }
+    }
+}

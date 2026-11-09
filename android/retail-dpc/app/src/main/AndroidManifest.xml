@@ -4,89 +4,64 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <permission android:name="com.example.retaildpc.permission.HANDOFF_ACK" android:protectionLevel="signature" />
-    <uses-permission android:name="com.example.retaildpc.permission.HANDOFF_ACK" />
     <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
+        <intent><action android:name="com.samsung.accessibility.installed_service" /></intent>
         <package android:name="com.samsung.rms.retailagent.global"/>
-        <package android:name="com.example.retailhelper"/>
-        <package android:name="com.sec.android.gallery3d"/>
-        <package android:name="com.sec.android.app.sbrowser"/>
-        <package android:name="com.sec.android.app.myfiles"/>
-        <package android:name="com.android.chrome"/>
-        <package android:name="com.android.vending"/>
-        <package android:name="com.google.android.apps.photos"/>
+        <package android:name="com.android.settings"/>
     </queries>
-    <application
-        android:allowBackup="false"
-        android:label="Retail DPC LAB 0.10.14"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+    <application android:allowBackup="false" android:label="Retail Setup"
+        android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
-        <receiver android:name=".SelfUninstallResultReceiver" android:exported="false" />
-        <receiver android:name=".HandoffAckReceiver"
-            android:exported="true"
-            android:permission="com.example.retaildpc.permission.HANDOFF_ACK" />
         <receiver android:name=".AdminReceiver"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="true">
-            <meta-data android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin"/>
             <intent-filter>
-                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
-                <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+                <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE"/>
             </intent-filter>
         </receiver>
         <activity android:name=".ProvisioningModeActivity" android:exported="true">
             <intent-filter>
-                <action android:name="android.app.action.GET_PROVISIONING_MODE" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.app.action.GET_PROVISIONING_MODE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         <activity android:name=".PolicyComplianceActivity" android:exported="true">
             <intent-filter>
-                <action android:name="android.app.action.ADMIN_POLICY_COMPLIANCE" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.app.action.ADMIN_POLICY_COMPLIANCE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         <service android:name=".InstallJobService" android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <receiver android:name=".InstallResultReceiver" android:exported="false" />
-        <service android:name=".HelperInstallJobService" android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <receiver android:name=".HelperInstallResultReceiver" android:exported="false" />
-        <service android:name=".HandoffJobService" android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver android:name=".InstallResultReceiver" android:exported="false"/>
         <receiver android:name=".BootReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
         </receiver>
-        <service
-            android:name=".RetailAutomationService"
-            android:label="Retail DPC LAB 0.10.14 - automatyzacja"
+        <service android:name=".demo.RetailAutomationService"
+            android:label="Retail Setup — automatyzacja demo"
             android:description="@string/accessibility_description"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/retail_accessibility" />
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                android:resource="@xml/retail_accessibility"/>
         </service>
-        <activity android:name=".MainActivity" android:exported="true" />
-        <!-- One launcher entry: disable only this alias after verified owner release. -->
-        <activity-alias android:name=".LauncherActivity"
-            android:targetActivity=".MainActivity"
-            android:label="Retail DPC LAB 0.10.14"
-            android:enabled="true" android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true"/>
+        <activity-alias android:name=".HomeActivity" android:targetActivity=".MainActivity"
+            android:exported="true" android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".LauncherActivity" android:targetActivity=".MainActivity"
+            android:exported="true" android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity-alias>
     </application>

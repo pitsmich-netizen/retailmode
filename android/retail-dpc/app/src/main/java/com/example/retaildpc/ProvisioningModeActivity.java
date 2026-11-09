@@ -30,7 +30,6 @@ public final class ProvisioningModeActivity extends Activity {
         if (incoming != null) {
             StoreSelection.accept(this, incoming);
             QrRetailCredential.accept(this, incoming);
-            HelperConfig.accept(this, incoming);
             response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE, incoming);
         }
         State.log(this, "GET_PROVISIONING_MODE / Fully managed");

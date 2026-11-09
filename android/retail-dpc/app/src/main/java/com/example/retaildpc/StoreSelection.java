@@ -25,11 +25,11 @@ final class StoreSelection {
     private static String safe(String v) { return v == null ? "" : v.substring(0, Math.min(v.length(), 80)); }
     static String partner(Context c) {
         String value=prefs(c).getString("partner", "");
-        return value.isEmpty() ? AutomationState.partner(c) : value;
+        return value.isEmpty() ? "AUCHAN" : value;
     }
     static String country(Context c) {
         String value=prefs(c).getString("country", "");
-        return value.isEmpty() ? AutomationState.country(c) : value;
+        return value.isEmpty() ? "Poland (SEPOL)" : value;
     }
     static String site(Context c) {
         String value=prefs(c).getString("site", "");

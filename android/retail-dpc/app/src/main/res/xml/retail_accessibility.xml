@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewScrolled|typeWindowsChanged"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewScrolled|typeWindowsChanged|typeNotificationStateChanged"
     android:packageNames="com.samsung.rms.retailagent.global"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="200"

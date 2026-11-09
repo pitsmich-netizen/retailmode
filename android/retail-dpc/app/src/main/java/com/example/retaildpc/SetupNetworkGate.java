@@ -27,7 +27,7 @@ final class SetupNetworkGate {
             + "opoznienie od pierwszego kolejkowania " + queuedForMs(c, task) + " ms");
         try {
             while (SystemClock.elapsedRealtime() - started < MAX_WAIT_MS) {
-                if (cancelled.getAsBoolean() || CleanupFlow.blocked(c)) return false;
+                if (cancelled.getAsBoolean() || SingleAppOwnerRelease.blocked(c)) return false;
                 DevicePolicyManager dpm = c.getSystemService(DevicePolicyManager.class);
                 if (dpm == null || !dpm.isDeviceOwnerApp(c.getPackageName())) {
                     State.log(c, "Gotowosc " + task + ": Wrapper nie jest Device Owner");

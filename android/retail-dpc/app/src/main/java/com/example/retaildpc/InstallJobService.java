@@ -24,7 +24,7 @@ public final class InstallJobService extends JobService {
     private volatile boolean cancelled = false;
 
     @Override public boolean onStartJob(JobParameters params) {
-        if (CleanupFlow.blocked(this)) { State.log(this, "Instalator zablokowany po próbie cleanup"); return false; }
+        if (SingleAppOwnerRelease.blocked(this)) { State.log(this, "Instalator zablokowany po próbie cleanup"); return false; }
         cancelled = false;
         State.log(this, "Retail: JobScheduler uruchomil InstallJobService; expedited="
             + params.isExpeditedJob());
@@ -40,12 +40,12 @@ public final class InstallJobService extends JobService {
                 } else {
                     DpcProgress.preparePermission(this);
                     if (!SetupNetworkGate.await(this, "retail", () -> cancelled)) {
-                        retry = !cancelled && !CleanupFlow.blocked(this);
+                        retry = !cancelled && !SingleAppOwnerRelease.blocked(this);
                         State.log(this, "Retail: oczekuję na zakończenie konfiguracji Androida");
                     } else {
                         File file = new File(getCacheDir(), "RetailMode-test.apk");
                         downloadWithFastRetry(file);
-                        if (!cancelled && !CleanupFlow.blocked(this)) {
+                        if (!cancelled && !SingleAppOwnerRelease.blocked(this)) {
                             DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
                             install(file);
                         }
@@ -72,12 +72,12 @@ public final class InstallJobService extends JobService {
     private void downloadWithFastRetry(File target) throws Exception {
         final long[] backoffsMs = {0L, 3000L, 8000L};
         for (int attempt = 1; attempt <= backoffsMs.length; attempt++) {
-            if (cancelled || CleanupFlow.blocked(this)) return;
+            if (cancelled || SingleAppOwnerRelease.blocked(this)) return;
             if (attempt > 1) {
                 DpcProgress.stage(this, "retail_retry_" + attempt,
                     "Próba " + attempt + "/3 — ponawiam Retail Mode…");
                 SystemClock.sleep(backoffsMs[attempt - 1]);
-                if (cancelled || CleanupFlow.blocked(this)) return;
+                if (cancelled || SingleAppOwnerRelease.blocked(this)) return;
             }
             target.delete();
             DpcProgress.stage(this, "retail_downloading_" + attempt,

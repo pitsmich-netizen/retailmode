@@ -1,5 +1,15 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.0-ci: All-In-One (eksperyment)
+
+- Jeden APK łączy Device Owner, instalator Retail Mode i sprawdzoną automatyzację przeniesioną z Helpera do podpakietu demo.
+- Ciemny ekran START, bieżące etapy i prawdziwy procent pobranych danych; zwijane opcje diagnostyczne; brak instruktażowych Toastów w aktywnej ścieżce.
+- Tymczasowy ekran HOME bez Lock Task; przed zwolnieniem Device Owner przywracana zwykła obsługa HOME.
+- Wciśnięcie START przed zakończeniem pobierania zapamiętuje intencję; po pobraniu i weryfikacji APK zwalniany jest Device Owner, a aplikacja kontynuuje jako zwykła.
+- Ręczna zgoda na Accessibility pozostaje konieczna. Po rozpoczęciu pobierania zawartości demo Accessibility zostaje wyłączona, ikona aplikacji jest domyślnie ukryta.
+- Hasło Retail Mode pochodzi z lokalnego QR przez Keystore; nie zapisano haseł w publicznym repo. Poprzedni wariant DPC + Helper pozostaje w archiwalnych wydaniach.
+- To wstępna wersja wymagająca testu Galaxy S26, szczególnie pierwszego HOME, przejścia START → zgoda, modelu Experience i restartu.
+
 ## 2026-11-09 — DPC 0.10.14-ci + Helper 0.2.15: Wrapper pozostaje bez administratora i bez ikony
 
 - Po instalacji obu APK i podpisanym potwierdzeniu Helpera DPC zwalnia Device Owner i aktywnego Device Administratora, anuluje zadania i czyści powiadomienia jak wcześniej.
