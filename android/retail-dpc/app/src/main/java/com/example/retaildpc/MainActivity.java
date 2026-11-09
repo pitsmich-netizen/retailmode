@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.7",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.8",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -183,6 +183,8 @@ public class MainActivity extends Activity {
         button(extra,"Zatrzymaj automat",PANEL).setOnClickListener(v->{
             DemoUiBridge.stop(this);refresh();
         });
+        button(extra,"Ponów samą rejestrację Retail Mode",PANEL)
+            .setOnClickListener(v->retryRegistrationPressed());
         button(extra,"Pokaż raport aplikacji fabrycznych",PANEL).setOnClickListener(v->{
             boolean visible=stockAppsReport.getVisibility()==View.VISIBLE;
             stockAppsReport.setVisibility(visible?View.GONE:View.VISIBLE);
@@ -280,6 +282,43 @@ public class MainActivity extends Activity {
                 // START is deliberately NOT pressed automatically after release.
             });
         },"retail-release-owner").start();
+    }
+    private void retryRegistrationPressed() {
+        if(DemoUiBridge.completed(this)){
+            new AlertDialog.Builder(this)
+                .setTitle("Demo zostało już zarejestrowane")
+                .setMessage("Retail Setup ma potwierdzenie pobierania lub rejestracji. " +
+                    "Nie uruchamiam ponownie formularza, żeby nie zakłócać działającego demo.")
+                .setPositiveButton("OK",null).show();
+            return;
+        }
+        if(!State.installed(this)||!SingleAppOwnerRelease.released(this)){
+            new AlertDialog.Builder(this)
+                .setTitle("Rejestracja jeszcze niedostępna")
+                .setMessage("Retail Mode musi być zainstalowany, a Device Owner zwolniony.")
+                .setPositiveButton("OK",null).show();
+            return;
+        }
+        new AlertDialog.Builder(this)
+            .setTitle("Ponowić samą rejestrację?")
+            .setMessage("Nie pobiorę ponownie APK ani nie zresetuję telefonu. " +
+                "Najpierw sprawdzę, czy Retail Mode sam potwierdza rejestrację lub pobieranie.\n\n" +
+                "Aby automatycznie wpisać hasło Retail Mode, wpisz je wcześniej " +
+                "w polu „Hasło Retail Mode” w opcjach zaawansowanych. " +
+                "PIN 5444 służy wyłącznie do panelu serwisowego.")
+            .setNegativeButton("Anuluj",null)
+            .setPositiveButton("Ponów rejestrację",(dialog,which)->{
+                String secret=password.getText().toString();
+                password.getText().clear();
+                try{
+                    DemoUiBridge.retryRegistration(this,model.getText().toString(),
+                        StoreSelection.country(this),StoreSelection.partner(this),
+                        site.getText().toString(),secret);
+                }catch(IllegalArgumentException ex){
+                    title.setText(ex.getMessage());
+                }
+                refresh();
+            }).show();
     }
     private void continueDemo(){
         if(!SingleAppOwnerRelease.released(this)||DemoUiBridge.completed(this))return;

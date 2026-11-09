@@ -27,6 +27,15 @@ final class CompletionHider {
     static String status(Context c) {
         return prefs(c).getString("detail", "Nie zakończono konfiguracji");
     }
+    static void markAlreadyConfigured(Context c,boolean downloading) {
+        prefs(c).edit().putBoolean("download_ack",true)
+            .putLong("download_ack_at",System.currentTimeMillis())
+            .putString("registration_state",downloading?"downloading":"registered")
+            .putString("detail",downloading
+                ? "Retail Mode potwierdził rozpoczęte pobieranie — rejestracja pominięta"
+                : "Retail Mode potwierdził wcześniejszą rejestrację — formularz pominięty")
+            .commit();
+    }
     static void markDownloadAcknowledged(Context c) {
         prefs(c).edit().putBoolean("download_ack", true)
             .putLong("download_ack_at", System.currentTimeMillis())

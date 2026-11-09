@@ -1,4 +1,4 @@
-# Retail Setup 0.11.7-ci — All-In-One
+# Retail Setup 0.11.8-ci — All-In-One
 
 Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 
@@ -28,3 +28,11 @@ To prototyp do testów na uprawnionym, możliwym do zresetowania Samsungu. Wersj
 - Dla pakietów rozróżniamy stany: zainstalowana, wyłączona, niezainstalowana dla bieżącego użytkownika, brak/niewidoczna. Dzięki z góry zadeklarowanym pakietom `<queries>` nie wymagamy `QUERY_ALL_PACKAGES`.
 - W ustawieniach za PIN-em **5444** dostępne «Pokaż raport aplikacji fabrycznych» i log z wynikami przywracania. Liczb nie wolno interpretować jako potwierdzenia obecności ikon bez testu na S26.
 - Wbudowany proces Retail Mode i funkcje 0.11.6 niezmienione. Po teście porównać Kalendarz, Kalkulator, Zegar, Notes, Members, Bixby i społecznościowe.
+
+## 0.11.8: rejestracja bez powtarzania instalacji
+
+- W zaawansowanym panelu dodano «Ponów samą rejestrację Retail Mode». To świadome ponowienie automatu po wcześniejszym zatrzymaniu; nie pobiera ponownie APK, nie przywraca Device Owner i nie wykonuje resetu.
+- Hasło Retail Mode nie jest utrwalane po pierwszej konfiguracji. Aby automatycznie ponowić również hasło, należy wpisać je ponownie w polu zaawansowanym. PIN 5444 otwiera tylko panel serwisowy.
+- Potwierdzona lokalnie rejestracja blokuje ponowienie, by nie naruszyć działającego demo.
+- Przed klikaniem formularza Accessibility analizuje wyłącznie widoczne komunikaty Samsung Retail Mode, które jednoznacznie wskazują na rejestrację lub pobieranie. Wówczas pomija formularz, zapisuje status i wyłącza Accessibility. Ekran główny, obecność APK lub niejednoznaczny tekst nie są dowodem ukończenia rejestracji.
+- Wobec braku udokumentowanego API Samsunga do odczytu rejestracji detekcja jest ostrożna i zależy od wersji UI. Wymaga testu na S26.

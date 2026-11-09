@@ -108,6 +108,12 @@ public final class RetailAutomationService extends AccessibilityService {
         try {
             if (root == null || root.getPackageName() == null ||
                 !TARGET.contentEquals(root.getPackageName())) return;
+            // Check BEFORE any click: do not re-register an already active demo.
+            int observed=RegistrationStatusDetector.detect(root);
+            if(observed!=RegistrationStatusDetector.UNKNOWN){
+                finishAlreadyConfigured(observed);
+                return;
+            }
             int step = AutomationState.phase(this);
             if (step != previousPhase) {
                 previousPhase = step;
@@ -266,6 +272,18 @@ public final class RetailAutomationService extends AccessibilityService {
             }
         }
         return false;
+    }
+
+    private void finishAlreadyConfigured(int observed) {
+        if(!AutomationState.active(this))return;
+        statusToast.cancel();
+        boolean downloading=observed==RegistrationStatusDetector.DOWNLOADING;
+        AutomationState.stop(this,downloading
+            ? "Retail Mode potwierdza pobieranie demo; nie ponawiam rejestracji."
+            : "Retail Mode potwierdza wcześniejszą rejestrację; pomijam formularz.");
+        CompletionHider.markAlreadyConfigured(this,downloading);
+        try{disableSelf();}
+        finally{CompletionHider.hideLauncherIfComplete(this);}
     }
 
     private void finishOnDownloadStart() {

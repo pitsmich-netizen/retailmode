@@ -19,7 +19,8 @@ public final class DemoUiBridge {
     public static boolean pending(Context c) { return PendingStart.armed(c); }
     public static boolean completed(Context c) { return CompletionHider.downloadAcknowledged(c); }
     public static String status(Context c) {
-        if (completed(c)) return "Pobieranie demo rozpoczęte. Dostępność została wyłączona.";
+        if (completed(c)) return CompletionHider.status(c) +
+            ". Dostępność została wyłączona.";
         if (PendingStart.armed(c)) return "Włącz Retail Setup w systemowych ustawieniach Dostępności.";
         if (active(c)) return AutomationState.info(c);
         return "Gotowy do uruchomienia konfiguracji demo.";
@@ -34,6 +35,8 @@ public final class DemoUiBridge {
     }
     public static void prepare(Activity a, String model, String country, String partner,
                                String site, String password) {
+        if(CompletionHider.downloadAcknowledged(a))
+            throw new IllegalArgumentException("Demo już potwierdzone; nie rejestruję ponownie.");
         if (site == null || !site.matches("[A-Za-z0-9_-]{4,40}"))
             throw new IllegalArgumentException("Nieprawidlowe Site ID");
         String canonical = ProfileMatcher.canonicalModel(model);
@@ -52,6 +55,18 @@ public final class DemoUiBridge {
             PendingStart.arm(a, country, partner, site, full);
             AccessibilityNavigator.open(a);
         }
+    }
+    /**
+     * Explicit retry of enrollment only, without reinstall or QR provisioning.
+     * Does not override a locally confirmed download/registered demo.
+     */
+    public static void retryRegistration(Activity a,String model,String country,
+                                         String partner,String site,String password) {
+        if(completed(a))
+            throw new IllegalArgumentException(
+                "Demo jest już zarejestrowane; ponowienie zostało zablokowane.");
+        stop(a);
+        prepare(a,model,country,partner,site,password);
     }
     public static void onResume(Activity a) {
         if (PendingStart.beginIfReady(a) ||
