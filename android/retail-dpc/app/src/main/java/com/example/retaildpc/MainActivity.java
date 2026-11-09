@@ -97,7 +97,7 @@ public final class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP    •    0.11.2",14,BLUE,true);gap(page,14);
+        text(page,"RETAIL  /  SETUP    •    0.11.3",14,BLUE,true);gap(page,14);
         text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
@@ -177,6 +177,7 @@ public final class MainActivity extends Activity {
         if(busy || !State.installed(this) || !SingleAppOwnerRelease.released(this)
                 || DemoUiBridge.completed(this) || DemoUiBridge.active(this)
                 || DemoUiBridge.pending(this)) return;
+        DpcProgress.dismissReady(this);
         continueDemo();
         refresh();
     }

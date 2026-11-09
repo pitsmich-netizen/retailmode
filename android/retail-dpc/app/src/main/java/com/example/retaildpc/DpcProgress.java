@@ -18,7 +18,7 @@ import java.util.Locale;
 /** Status in the app and optional system notifications. No instructional Toasts. */
 final class DpcProgress {
     private static final String CHANNEL="retail_setup_all_in_one";
-    private static final int STATUS_ID=12201, PROGRESS_ID=12202;
+    private static final int STATUS_ID=12201, PROGRESS_ID=12202, READY_ID=12203;
     private static final String PREF="retail_progress_100";
     private static long lastAt;
     private DpcProgress(){}
@@ -120,6 +120,41 @@ final class DpcProgress {
         NotificationManager nm=c.getSystemService(NotificationManager.class);
         if(nm!=null)nm.cancel(id);
     }
+    /** Stay reachable after Device Owner release even with no launcher icon. */
+    static void showReady(Context c) {
+        try {
+            NotificationManager nm=c.getSystemService(NotificationManager.class);
+            if(nm==null)return;
+            if(Build.VERSION.SDK_INT>=33&&c.checkSelfPermission(
+                Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+                State.log(c,"Gotowe do START, ale brak zgody na powiadomienie");
+                return;
+            }
+            if(Build.VERSION.SDK_INT>=26){
+                NotificationChannel channel=new NotificationChannel(CHANNEL,
+                    "Przygotowanie Retail Mode",NotificationManager.IMPORTANCE_LOW);
+                nm.createNotificationChannel(channel);
+            }
+            Intent open=new Intent(c,MainActivity.class);
+            open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pending=PendingIntent.getActivity(c,3,open,
+                PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
+            Notification.Builder b=Build.VERSION.SDK_INT>=26
+                ?new Notification.Builder(c,CHANNEL):new Notification.Builder(c);
+            b.setSmallIcon(R.drawable.retail_progress)
+                .setContentTitle("Retail Setup — gotowe do START")
+                .setContentText("Dotknij, aby wrócić do konfiguracji demo")
+                .setContentIntent(pending)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setCategory(Notification.CATEGORY_STATUS)
+                .setShowWhen(false);
+            nm.notify(READY_ID,b.build());
+        }catch(RuntimeException ex){
+            State.log(c,"Powiadomienie START: "+ex.getClass().getSimpleName());
+        }
+    }
+    static void dismissReady(Context c){cancel(c,READY_ID);}
     static synchronized void clear(Context c){
         cancel(c,STATUS_ID);cancel(c,PROGRESS_ID);
     }

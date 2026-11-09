@@ -32,8 +32,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 40
-        versionName '0.11.2-ci-ready-start-home-exit'
+        versionCode 41
+        versionName '0.11.3-ci-ready-notification'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

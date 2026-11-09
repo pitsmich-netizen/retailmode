@@ -50,8 +50,10 @@ final class SingleAppOwnerRelease {
                 return false;
             }
             disable(c,"HomeActivity");
-            disable(c,"BootReceiver");
+            // Keep BootReceiver until demo completes: on reboot it can restore
+            // the pending START notification; it no longer requests owner policies.
             DpcProgress.clear(c);
+            DpcProgress.showReady(c);
             State.log(c,"DPC bez Device Owner, pakiet nadal zainstalowany");
             return true;
         }catch(RuntimeException e){

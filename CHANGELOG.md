@@ -1,5 +1,12 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.3-ci: powrót do START z pulpitu
+
+- Dodatkowe zabezpieczenie wariantu 0.11.2: po automatycznym zwolnieniu Device Ownera aplikacja pozostawia powiadomienie «Retail Setup — gotowe do START», prowadzące do właściwej aktywności bez ikony.
+- Po ręcznym kliknięciu START powiadomienie jest chowane. Jeśli urządzenie uruchomi się ponownie przed uruchomieniem demo, BootReceiver odtwarza drogę powrotu, a po zakończeniu demo może wyłączyć się przy restarcie.
+- Nie zmieniono wartości QR Wi-Fi, Site ID, hasła Retail Mode, hash APK Samsung, ani automatyzacji Experience.
+- Wymaga testu fizycznego na Galaxy S26; działanie powiadomień po oddaniu administratora jest zależne od zgody systemowej.
+
 ## 2026-11-09 — Retail Setup 0.11.2-ci: START gated, pulpitu awaryjny i Accessibility hint
 
 - START wyłączony i wyszarzony do **zakończenia pobierania/instalacji Retail Mode ORAZ faktycznego zwolnienia Device Ownera i aktywnego administratora**. Nie można go nacisnąć za wcześnie.
