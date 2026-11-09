@@ -2,6 +2,8 @@ package com.example.retaildpc;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
@@ -103,6 +105,13 @@ final class DpcProgress {
                 if(pct>=0)b.setProgress(100,pct,false);
                 else b.setProgress(0,0,true);
             }
+            // Backup entry point if an OEM ignores the temporary HOME policy.
+            // A user can always tap the existing download/status notification.
+            Intent open=new Intent(c,MainActivity.class);
+            open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pending=PendingIntent.getActivity(c,0,open,
+                PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
+            b.setContentIntent(pending);
             nm.notify(id,b.build());
         }catch(RuntimeException e){State.log(c,"Notyfikacja: "+e.getClass().getSimpleName());}
     }
