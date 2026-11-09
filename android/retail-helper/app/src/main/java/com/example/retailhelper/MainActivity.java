@@ -26,7 +26,8 @@ public final class MainActivity extends Activity {
         @Override public void run() {
             if (isFinishing() || isDestroyed()) return;
             if (HandoffBridge.released(MainActivity.this)) {
-                HandoffBridge.launchSystemUninstall(MainActivity.this);
+                // 0.2.15: Owner relinquished. DPC may remain installed, dormant.
+                // No system uninstall prompt is launched automatically.
                 refresh();
                 return;
             }
@@ -47,7 +48,7 @@ public final class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
         TextView title = new TextView(this);
-        title.setText("Retail Helper 0.2.14\nKonfiguracja demo");
+        title.setText("Retail Helper 0.2.15\nKonfiguracja demo");
         title.setTextSize(19);
         layout.addView(title);
         TextView notice = new TextView(this);
@@ -101,9 +102,9 @@ public final class MainActivity extends Activity {
         primaryAction = new Button(this);
         primaryAction.setText("ROZPOCZNIJ DEMO");
         primaryAction.setOnClickListener(v -> {
-            if (HandoffBridge.wrapperInstalled(this)) {
-                if (HandoffBridge.released(this)) HandoffBridge.retrySystemUninstall(this);
-                else Toast.makeText(this, "Czekam na zwolnienie Wrappera", Toast.LENGTH_SHORT).show();
+            if (!HandoffBridge.readyForDemo(this)) {
+                Toast.makeText(this, "Czekam na zwolnienie Device Owner i administratora DPC",
+                    Toast.LENGTH_SHORT).show();
                 return;
             }
             confirmAndStart();
@@ -149,7 +150,7 @@ public final class MainActivity extends Activity {
                 Toast.makeText(this, "Najpierw naciśnij STOP, aby przerwać aktywny przebieg", Toast.LENGTH_LONG).show();
             }
         });
-        add(advanced, "Usuń Wrapper po zwolnieniu Device Owner", () -> {
+        add(advanced, "Awaryjnie usuń ukryty Wrapper (opcjonalne)", () -> {
             if (HandoffBridge.released(this)) {
                 // A previous canceled attempt can be retried from Android Settings.
                 Intent i = new Intent(Intent.ACTION_DELETE,
@@ -193,8 +194,9 @@ public final class MainActivity extends Activity {
     }
 
     private void confirmAndStart() {
-        if (HandoffBridge.wrapperInstalled(this)) {
-            Toast.makeText(this, "Najpierw potwierdź usunięcie Wrappera", Toast.LENGTH_LONG).show();
+        if (!HandoffBridge.readyForDemo(this)) {
+            Toast.makeText(this, "Najpierw DPC musi zwolnić Device Owner i administratora",
+                Toast.LENGTH_LONG).show();
             return;
         }
         if (!saveModel()) return;
@@ -318,11 +320,9 @@ public final class MainActivity extends Activity {
             PendingStart.armed(this) ? "Oczekuję na włączenie Dostępności" :
             AutomationState.active(this) ? "Trwa konfiguracja demo" : "Gotowy do rozpoczęcia";
         if (primaryAction != null) {
-            boolean installed = HandoffBridge.wrapperInstalled(this);
-            boolean released = HandoffBridge.released(this);
-            primaryAction.setText(!installed ? "ROZPOCZNIJ DEMO"
-                : released ? "POTWIERDŹ USUNIĘCIE DPC" : "CZEKAJ — ZWALNIAM DPC");
-            primaryAction.setEnabled(!installed || released);
+            boolean ready = HandoffBridge.readyForDemo(this);
+            primaryAction.setText(ready ? "ROZPOCZNIJ DEMO" : "CZEKAJ — ZWALNIAM DPC");
+            primaryAction.setEnabled(ready);
         }
         status.setText("\nDostępność: " + accessibility + "\n" + process +
             (AutomationState.active(this) ? "\n" + AutomationState.info(this) : ""));

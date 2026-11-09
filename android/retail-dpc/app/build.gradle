@@ -60,8 +60,8 @@ android {
         buildConfigField 'String', 'LOCAL_TEST_RETAIL_PASSWORD', '"' + escapeBuildConfig(testRetailPassword) + '"'
         buildConfigField 'String', 'HELPER_URL', '"' + escapeBuildConfig(helperUrl) + '"'
         buildConfigField 'String', 'HELPER_SHA256', '"' + helperSha256 + '"'
-        versionCode 36
-        versionName '0.10.13-ci-expedited-jobs'
+        versionCode 37
+        versionName '0.10.14-ci-dormant-wrapper'
     }
     buildFeatures {
         buildConfig true

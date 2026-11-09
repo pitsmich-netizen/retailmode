@@ -23,7 +23,7 @@
     </queries>
     <application
         android:allowBackup="false"
-        android:label="Retail DPC LAB 0.10.13"
+        android:label="Retail DPC LAB 0.10.14"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false">
         <receiver android:name=".SelfUninstallResultReceiver" android:exported="false" />
@@ -67,7 +67,7 @@
         </receiver>
         <service
             android:name=".RetailAutomationService"
-            android:label="Retail DPC LAB 0.10.13 - automatyzacja"
+            android:label="Retail DPC LAB 0.10.14 - automatyzacja"
             android:description="@string/accessibility_description"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
@@ -78,11 +78,16 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/retail_accessibility" />
         </service>
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true" />
+        <!-- One launcher entry: disable only this alias after verified owner release. -->
+        <activity-alias android:name=".LauncherActivity"
+            android:targetActivity=".MainActivity"
+            android:label="Retail DPC LAB 0.10.14"
+            android:enabled="true" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
     </application>
 </manifest>

@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — DPC 0.10.14-ci + Helper 0.2.15: Wrapper pozostaje bez administratora i bez ikony
+
+- Po instalacji obu APK i podpisanym potwierdzeniu Helpera DPC zwalnia Device Owner i aktywnego Device Administratora, anuluje zadania i czyści powiadomienia jak wcześniej.
+- Helper akceptuje stan po **zwolnieniu uprawnień**, nie wymaga już fizycznej deinstalacji pakietu DPC. Nie otwiera systemowego okna deinstalacji.
+- Helper potwierdza zwolnienie podpisanym ACK; dopiero po jego odebraniu i ponownej weryfikacji braku obu uprawnień DPC wyłącza swoją ikonę Launchera, BootReceiver i nieużywaną usługę Accessibility. DPC zostaje zainstalowany i jest dostępny z Ustawienia → Aplikacje; MainActivity pozostaje adresowalna jawnie.
+- Niezmienione: sprawdzanie SHA-256, szybkie próby pobierania Retail, diagnostyka, eksperymentalne expedited jobs 0.10.13, dane QR, automatyzacja Retail Mode i wyłączanie Accessibility Helpera.
+- W Helperze zachowana opcjonalna ręczna deinstalacja DPC w Zaawansowanych. Jeśli ikona nie ukryje się na Samsungu, nie blokuje to rozpoczęcia demo.
+- Nowe wersje są **eksperymentalne**; wymagają testu na fizycznym Galaxy S26, w tym testu zachowania po restarcie i braku ikony DPC.
+
 ## 2026-11-08 — DPC 0.10.13-ci + Helper 0.2.14: eksperyment JobScheduler expedited
 
 - Pomiar na S26 w 0.10.12 pokazał 41,522 s od pierwszego zaplanowania Retail jobu do wejścia do JobService i tylko 0,001 s na flagi: obie były już ustawione. 41,522 s obejmuje czas kreatora konfiguracji, więc nie jest bezpośrednim pomiarem opóźnienia po wyświetleniu pulpitu.

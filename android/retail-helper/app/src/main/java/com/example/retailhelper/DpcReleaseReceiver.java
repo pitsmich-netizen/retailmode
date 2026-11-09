@@ -15,7 +15,9 @@ public final class DpcReleaseReceiver extends BroadcastReceiver {
         boolean probe = i.getBooleanExtra("silent_probe_098", false);
         HandoffBridge.recordRelease(c, token,
             i.getBooleanExtra("released", false), i.getStringExtra("detail"), probe);
-        if (probe && HandoffBridge.released(c)) {
+        // Acknowledge every verified release. DPC 0.10.14 then hides its
+        // launcher rather than starting any automatic uninstall flow.
+        if (HandoffBridge.released(c)) {
             HandoffBridge.acknowledgeStoredRelease(c, token);
         }
     }

@@ -13,7 +13,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.Toast;
 
-/** Signed handoff: the actual foreground UI acknowledges DPC; user confirms system uninstall. */
+/** Signed handoff: the actual foreground UI acknowledges DPC. In 0.2.15 uninstall is optional. */
 final class HandoffBridge {
     private static final String DPC = "com.example.retaildpc";
     private static final String P = "retail_helper_handoff_095";
@@ -71,6 +71,19 @@ final class HandoffBridge {
             "DPC nie został w pełni zwolniony; nie rozpoczynam deinstalacji");
     }
     static boolean released(Context c) { return hasSession(c) && p(c).getBoolean("released", false); }
+    /** A verified release, NOT package removal, permits Retail demo start. */
+    static boolean readyForDemo(Context c) {
+        if (!released(c)) return false;
+        DevicePolicyManager dpm = c.getSystemService(DevicePolicyManager.class);
+        if (dpm == null) return false;
+        try {
+            ComponentName admin = new ComponentName(DPC, DPC + ".AdminReceiver");
+            return !dpm.isDeviceOwnerApp(DPC) && !dpm.isAdminActive(admin);
+        } catch (RuntimeException ex) {
+            AutomationState.log(c, "Nie mogę zweryfikować zwolnienia admina DPC");
+            return false;
+        }
+    }
     static boolean wrapperInstalled(Context c) {
         try {
             c.getPackageManager().getPackageInfo(DPC, 0);
@@ -121,8 +134,8 @@ final class HandoffBridge {
         launchSystemUninstall(a);
     }
     static String status(Context c) {
-        if (released(c)) return wrapperInstalled(c)
-            ? "Device Owner zwolniony; potwierdź usunięcie DPC"
+        if (readyForDemo(c)) return wrapperInstalled(c)
+            ? "Device Owner zwolniony; DPC zostaje nieaktywny i ukryty"
             : "DPC usunięty; gotowe do uruchomienia demo";
         if (hasSession(c)) return "oczekuję na zwolnienie DPC";
         return wrapperInstalled(c) ? "DPC nadal zainstalowany" : "brak aktywnego Wrappera";

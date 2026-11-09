@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 
 /** Test-device-only: relinquish ownership BEFORE Helper registers Samsung Retail Mode.
  * Deprecated Android API may leave policies behind; DO NOT use on real managed fleets.
+ * Starting in 0.10.14, the Helper ACK puts DPC into dormant mode, without uninstall.
  */
 final class OwnerReleaseFlow {
     private static final String PREF = "retail_dpc_cleanup_082";
@@ -94,9 +95,12 @@ final class OwnerReleaseFlow {
             return;
         }
         handoff.edit().putBoolean(pfx + "started", true).commit();
-        boolean queued = SilentSelfUninstallProbe.tryUninstall(c);
-        State.log(c, queued
-            ? "DPC 0.10.1: próba cichego usunięcia po potwierdzeniu Helpera."
-            : "DPC 0.10.1: PackageInstaller odmówił; Helper przejdzie do systemowego potwierdzenia.");
+        // New 0.10.14 behavior: no PackageInstaller uninstall request.
+        // The verified Helper now permits demo start with DPC installed
+        // as long as both owner and active admin privileges are gone.
+        boolean hidden = WrapperDormancy.enter(c);
+        State.log(c, hidden
+            ? "DPC 0.10.14: Wrapper pozostaje zainstalowany bez uprawnień; ikona ukryta."
+            : "DPC 0.10.14: Wrapper zwolniony; ikonę można usunąć ręcznie w Ustawieniach.");
     }
 }
