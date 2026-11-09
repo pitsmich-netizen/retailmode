@@ -30,13 +30,16 @@ final class SingleAppOwnerRelease {
         if(dpm==null)return false;
         ComponentName admin=new ComponentName(c,AdminReceiver.class);
         if(released(c)){
-            RetailHomePolicy.disableHomeAlias(c);
+            if (emergency) RetailHomePolicy.disableHomeAlias(c);
             return true;
         }
         try{
             if(dpm.isDeviceOwnerApp(c.getPackageName())){
                 RetailHomePolicy.clear(c); // BEFORE clearDeviceOwnerApp()
-                RetailHomePolicy.disableHomeAlias(c); // Do not leave our HOME handler active
+                // Do NOT disable HomeActivity here. On Samsung it can close
+                // the foreground HOME-backed setup task before START is shown.
+                // MainActivity is first promoted into a separate ReadyActivity
+                // task. HOME alias is disabled on user START or manual exit.
                 c.getSharedPreferences(P,Context.MODE_PRIVATE).edit()
                     .putBoolean("release_prepared",true).commit();
                 JobScheduler js=c.getSystemService(JobScheduler.class);
@@ -49,7 +52,7 @@ final class SingleAppOwnerRelease {
                 State.log(c,"Nie udało się zwolnić uprawnień administratora");
                 return false;
             }
-            disable(c,"HomeActivity");
+            if (emergency) RetailHomePolicy.disableHomeAlias(c);
             // Keep BootReceiver until demo completes: on reboot it can restore
             // the pending START notification; it no longer requests owner policies.
             DpcProgress.clear(c);

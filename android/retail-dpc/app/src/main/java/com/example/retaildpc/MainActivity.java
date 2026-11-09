@@ -25,7 +25,7 @@ import android.widget.TextView;
 import com.example.retaildpc.demo.DemoUiBridge;
 
 /** A single dark screen instead of a collection of instructions and Toasts. */
-public final class MainActivity extends Activity {
+public class MainActivity extends Activity {
     private static final int BG=Color.rgb(9,15,28),PANEL=Color.rgb(23,34,53);
     private static final int WHITE=Color.rgb(240,245,250),MUTED=Color.rgb(164,182,201);
     private static final int BLUE=Color.rgb(63,121,240);
@@ -37,6 +37,8 @@ public final class MainActivity extends Activity {
     private EditText model,site,password;
     private LinearLayout extra;
     private boolean busy,optionsShown;
+    private boolean switchingToReadyTask;
+    private boolean deferHomeCleanupUntilPause;
     private long lastReleaseAttemptAt = 0L;
     private TextView accessibilityHint;
     private final Runnable update=new Runnable(){
@@ -50,7 +52,14 @@ public final class MainActivity extends Activity {
                     &&SingleAppOwnerRelease.isOwner(MainActivity.this)
                     &&!busy&&now-lastReleaseAttemptAt>6000L){
                 lastReleaseAttemptAt=now;
-                releaseAndContinue(false);
+                if (MainActivity.this instanceof ReadyActivity) {
+                    // Only a separate non-HOME task may perform owner release.
+                    // Disabling the HOME alias from its own foreground task
+                    // caused Samsung to minimize the setup UI in 0.11.3.
+                    releaseAndContinue(false);
+                } else {
+                    openReadyTask();
+                }
             }
             handler.postDelayed(this,850);
         }
@@ -97,7 +106,7 @@ public final class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP    •    0.11.3",14,BLUE,true);gap(page,14);
+        text(page,"RETAIL  /  SETUP    •    0.11.4",14,BLUE,true);gap(page,14);
         text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
@@ -179,7 +188,32 @@ public final class MainActivity extends Activity {
                 || DemoUiBridge.pending(this)) return;
         DpcProgress.dismissReady(this);
         continueDemo();
+        // Keep HOME alias alive until the user's next screen (Accessibility
+        // settings or Retail Mode) becomes foreground. Never disable it while
+        // this screen is showing the ready START button.
+        if (DemoUiBridge.pending(this) || DemoUiBridge.active(this))
+            deferHomeCleanupUntilPause = true;
         refresh();
+    }
+
+    private void openReadyTask() {
+        if (switchingToReadyTask || isFinishing() || isDestroyed()) return;
+        switchingToReadyTask = true;
+        try {
+            Intent ready = new Intent(this, ReadyActivity.class);
+            ready.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(ready);
+            State.log(this, "Retail Ready: otwarto osobne zadanie poza HOME");
+            // MainActivity may have been launched by the HOME alias. We must
+            // finish that task's UI only AFTER starting the separate ready task.
+            finish();
+        } catch (RuntimeException ex) {
+            switchingToReadyTask = false;
+            State.log(this, "Retail Ready: nie można otworzyć ekranu: "
+                + ex.getClass().getSimpleName());
+            title.setText("Nie otwarto ekranu gotowości — sprawdź diagnostykę");
+        }
     }
     private void releaseAndContinue(boolean emergency){
         if(busy)return;
@@ -272,6 +306,13 @@ public final class MainActivity extends Activity {
         handler.removeCallbacks(update);handler.post(update);
     }
     @Override protected void onPause(){
-        handler.removeCallbacks(update);super.onPause();
+        handler.removeCallbacks(update);
+        // Disable the temporary HOME handler only after user-initiated START
+        // has actually navigated away from the foreground setup screen.
+        if (deferHomeCleanupUntilPause) {
+            deferHomeCleanupUntilPause = false;
+            RetailHomePolicy.disableHomeAlias(this);
+        }
+        super.onPause();
     }
 }

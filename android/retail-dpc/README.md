@@ -1,4 +1,4 @@
-# Retail Setup 0.11.2-ci — All-In-One
+# Retail Setup 0.11.4-ci — All-In-One
 
 Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 

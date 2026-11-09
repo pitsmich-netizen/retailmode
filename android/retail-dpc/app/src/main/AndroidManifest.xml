@@ -49,6 +49,12 @@
                 android:resource="@xml/retail_accessibility"/>
         </service>
         <!-- Android explicitly opens this after successful Device Owner provisioning. -->
+        <!-- Dedicated task retains the visible ready START when temporary HOME
+             preferences are cleared during Device Owner release. -->
+        <activity android:name=".ReadyActivity" android:exported="false"
+            android:taskAffinity="com.example.retaildpc.ready"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="false"/>
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.app.action.PROVISIONING_SUCCESSFUL"/>

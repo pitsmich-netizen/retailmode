@@ -1,5 +1,14 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.4-ci: gotowy START pozostaje na ekranie
+
+- Na S26 użytkownik potwierdził, że przygotowanie i demo działają, lecz przy automatycznym zwolnieniu Device Ownera gotowy ekran START minimalizował się do pulpitu.
+- Przyczyną w logice 0.11.3 było wyłączenie aliasu HOME podczas utraty Device Ownera. Wersja 0.11.4 przed zwolnieniem roli otwiera ekran przygotowania w osobnym, nie-HOME zadaniu `ReadyActivity`.
+- W ścieżce automatycznej HomeActivity nie jest wyłączana podczas zwolnienia Device Ownera; polityka preferowanego HOME jest nadal czyszczona PRZED zwolnieniem uprawnień. Alias jest wyłączany dopiero po świadomym START i przejściu do innej aktywności lub przez awaryjne «Wyjdź na pulpit Androida».
+- START pozostaje wyszarzony podczas przygotowania, a potem staje się aktywny na widocznym ekranie; nie zmieniono kroków automatyzacji Samsung Retail Mode ani włączenia Accessibility.
+- Utrzymano działającą opcję powrotu do One UI i powiadomienie «Retail Setup — gotowe do START». Zmieniono tylko przejście między przygotowaniem a gotowością.
+- **Wymaga testu na S26:** płynne przejście do START, brak minimalizacji, opcja awaryjnego pulpitu i kompletne demo.
+
 ## 2026-11-09 — Retail Setup 0.11.3-ci: powrót do START z pulpitu
 
 - Dodatkowe zabezpieczenie wariantu 0.11.2: po automatycznym zwolnieniu Device Ownera aplikacja pozostawia powiadomienie «Retail Setup — gotowe do START», prowadzące do właściwej aktywności bez ikony.
