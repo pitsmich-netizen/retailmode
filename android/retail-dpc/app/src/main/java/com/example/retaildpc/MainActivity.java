@@ -38,9 +38,9 @@ public class MainActivity extends Activity {
     private LinearLayout extra;
     private boolean busy,optionsShown;
     private boolean switchingToReadyTask;
-    private boolean deferHomeCleanupUntilPause;
     private long lastReleaseAttemptAt = 0L;
     private TextView accessibilityHint;
+    private Button accessibilityRetry;
     private final Runnable update=new Runnable(){
         @Override public void run(){
             if(isFinishing()||isDestroyed())return;
@@ -106,7 +106,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP    •    0.11.4",14,BLUE,true);gap(page,14);
+        text(page,"RETAIL  /  SETUP    •    0.11.5",14,BLUE,true);gap(page,14);
         text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
@@ -132,6 +132,11 @@ public class MainActivity extends Activity {
             "Wybierz Zainstalowane aplikacje → Retail Setup — automatyzacja demo → Włącz. " +
             "Potwierdź zgodę, a konfiguracja wznowi się automatycznie.",
             13,MUTED,false);
+        // Recovery stays in the main UI; no need to open developer diagnostics
+        // if Samsung briefly closes Accessibility Settings.
+        accessibilityRetry=button(page,"OTWÓRZ PONOWNIE DOSTĘPNOŚĆ",PANEL);
+        accessibilityRetry.setOnClickListener(v->DemoUiBridge.openAccessibility(this));
+        accessibilityRetry.setVisibility(View.GONE);
         gap(page,13);
         options=button(page,"Opcje zaawansowane  ▾",PANEL);
         options.setOnClickListener(v->{
@@ -188,11 +193,9 @@ public class MainActivity extends Activity {
                 || DemoUiBridge.pending(this)) return;
         DpcProgress.dismissReady(this);
         continueDemo();
-        // Keep HOME alias alive until the user's next screen (Accessibility
-        // settings or Retail Mode) becomes foreground. Never disable it while
-        // this screen is showing the ready START button.
-        if (DemoUiBridge.pending(this) || DemoUiBridge.active(this))
-            deferHomeCleanupUntilPause = true;
+        // Do NOT change HOME component enabled state on transition to Settings.
+        // Samsung One UI may close the just-opened Settings task.
+        // HOME is cleaned up only by the emergency exit or demo completion.
         refresh();
     }
 
@@ -283,6 +286,8 @@ public class MainActivity extends Activity {
         start.setEnabled(ready);
         start.setAlpha(ready ? 1f : 0.48f);
         accessibilityHint.setVisibility(done || active ? View.GONE : View.VISIBLE);
+        accessibilityRetry.setVisibility(waiting && !done && !active
+            ? View.VISIBLE : View.GONE);
         if(!released || !installed)
             accessibilityHint.setText("START będzie dostępny po instalacji Retail Mode " +
                 "i zwolnieniu administratora. Następnie pokażemy, jak włączyć Dostępność.");
@@ -307,12 +312,8 @@ public class MainActivity extends Activity {
     }
     @Override protected void onPause(){
         handler.removeCallbacks(update);
-        // Disable the temporary HOME handler only after user-initiated START
-        // has actually navigated away from the foreground setup screen.
-        if (deferHomeCleanupUntilPause) {
-            deferHomeCleanupUntilPause = false;
-            RetailHomePolicy.disableHomeAlias(this);
-        }
+        // Never disable a system HOME alias here: onPause also runs when
+        // Accessibility Settings comes to foreground.
         super.onPause();
     }
 }

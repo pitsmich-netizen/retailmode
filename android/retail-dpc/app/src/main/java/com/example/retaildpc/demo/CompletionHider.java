@@ -44,10 +44,17 @@ final class CompletionHider {
         if (!downloadAcknowledged(c) || AutomationState.active(c)) return false;
         PackageManager pm = c.getPackageManager();
         ComponentName launcher = alias(c);
+        ComponentName home = new ComponentName(c.getPackageName(),
+            c.getPackageName() + ".HomeActivity");
         try {
             // Persistent marker before a call that can terminate the process.
             prefs(c).edit().putString("detail", "Kończę konfigurację; ikona nie jest domyślnie włączona").commit();
-            AutomationState.log(c, "Potwierdzam wyłączoną ikonę LAUNCHER; manifest: enabled=false");
+            AutomationState.log(c, "Kończę ukrywanie komponentów HOME i LAUNCHER");
+            // Only now, after demo download is acknowledged and Accessibility
+            // has been disabled, remove HOME. Do not kill the app here.
+            pm.setComponentEnabledSetting(home,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
             pm.setComponentEnabledSetting(launcher,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 0);

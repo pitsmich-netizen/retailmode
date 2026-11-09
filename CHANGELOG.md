@@ -1,5 +1,15 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.5-ci: stabilny ekran Dostępności
+
+- Wyniki testu 0.11.4 na S26: provisioning QR, instalacja, START i zwolnienie Device Owner = OK. Po START ekran Accessibility miga i znika; ręczne otwarcie ustawień pozwalało uruchomić automat.
+- Zrezygnowano z nieoficjalnych skrótów do eksportowanych ekranów One UI i ukrytych aktywności Settings. Używana jest wyłącznie oficjalna akcja `Settings.ACTION_ACCESSIBILITY_SETTINGS` otwierana po świadomym START.
+- Usunięto wyłączanie aliasu HOME w `MainActivity.onPause()`, które mogło resetować zadanie ustawień podczas przejścia na pierwszy plan.
+- Na głównym ekranie, w stanie oczekiwania na zgodę, widoczny jest przycisk «OTWÓRZ PONOWNIE DOSTĘPNOŚĆ». Nie trzeba otwierać diagnostyki, aby powtórzyć przejście.
+- Własny alias HOME jest teraz wyłączany przy bezpiecznym powrocie na pulpit lub po potwierdzonym początku pobierania demo. Wcześniej: nie wyłączamy go automatycznie podczas otwierania ustawień.
+- Pozostałe funkcje z 0.11.4 bez zmian; w szczególności instalacja, release Device Owner i automatyzacja Retail Mode.
+- CI = jedyny APK All-In-One; test telefonu nadal konieczny, szczególnie widoczność ustawień i przejście do aktywacji Accessibility.
+
 ## 2026-11-09 — Retail Setup 0.11.4-ci: gotowy START pozostaje na ekranie
 
 - Na S26 użytkownik potwierdził, że przygotowanie i demo działają, lecz przy automatycznym zwolnieniu Device Ownera gotowy ekran START minimalizował się do pulpitu.
