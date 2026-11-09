@@ -1,4 +1,4 @@
-name: Build and publish Retail test APKs from sources
+name: Build Retail Setup All-In-One APK
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
     paths:
       - '.github/workflows/retail-build-from-source.yml'
       - 'android/retail-dpc/**'
-      - 'android/retail-helper/**'
   workflow_dispatch:
 
 permissions:
@@ -21,158 +20,105 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Validate imported Android projects
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f android/retail-dpc/app/build.gradle
-          test -f android/retail-helper/app/build.gradle.kts
-
-      - name: Install Java 17
+      - name: Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Use runner Android SDK (no deprecated tools package)
+      - name: Android SDK
         shell: bash
         run: |
           set -euo pipefail
-          test -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          SDKMANAGER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/16.0/bin/sdkmanager"
-          fi
-          test -x "$SDKMANAGER"
-          "$SDKMANAGER" --install 'platforms;android-36' 'platforms;android-35' 'build-tools;35.0.0'
-          echo "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0" >> "$GITHUB_PATH"
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          MANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$MANAGER" ]; then MANAGER="$SDK/cmdline-tools/16.0/bin/sdkmanager"; fi
+          "$MANAGER" --install 'platforms;android-36' 'build-tools;35.0.0'
+          echo "$SDK/build-tools/35.0.0" >> "$GITHUB_PATH"
 
-      - name: Set up Gradle 8.13
+      - name: Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
 
-      - name: Preflight verified Retail Mode APK from immutable RAW URL
+      - name: Verify pinned Samsung Retail Mode package
         shell: bash
         run: |
           set -euo pipefail
           curl -fLsS --retry 3 --retry-all-errors --retry-delay 3 --connect-timeout 15 --max-time 120 \
-            'https://raw.githubusercontent.com/pitsmich-netizen/retailmode/58bed6b59596e1ed82bb2526bbdb202f114a3391/provisioning/RetailMode.apk' -o /tmp/retail-mode-raw-test.apk
-          test "$(stat -c '%s' /tmp/retail-mode-raw-test.apk)" = "34192143"
-          echo 'da5ede9aa02aa278fa82b97caba8eb2e79a4e6fea9bdc5e3b50ebb3e5bc245c4  /tmp/retail-mode-raw-test.apk' | sha256sum -c -
-          echo 'Retail Mode raw mirror works and content is identical to approved rmtest release.'
+            'https://raw.githubusercontent.com/pitsmich-netizen/retailmode/58bed6b59596e1ed82bb2526bbdb202f114a3391/provisioning/RetailMode.apk' -o /tmp/retailmode-test.apk
+          test "$(stat -c '%s' /tmp/retailmode-test.apk)" = "34192143"
+          echo 'da5ede9aa02aa278fa82b97caba8eb2e79a4e6fea9bdc5e3b50ebb3e5bc245c4  /tmp/retailmode-test.apk' | sha256sum -c -
 
-      - name: Restore optional stable TEST signing key
+      - name: Restore optional stable test key
         env:
-          RETAIL_CI_DEBUG_KEYSTORE_B64: ${{ secrets.RETAIL_CI_DEBUG_KEYSTORE_B64 }}
+          TEST_KEY: ${{ secrets.RETAIL_CI_DEBUG_KEYSTORE_B64 }}
         shell: bash
         run: |
           set -euo pipefail
-          if [ -n "$RETAIL_CI_DEBUG_KEYSTORE_B64" ]; then
+          if [ -n "$TEST_KEY" ]; then
             mkdir -p "$HOME/.android"
-            printf '%s' "$RETAIL_CI_DEBUG_KEYSTORE_B64" | base64 --decode > "$HOME/.android/debug.keystore"
+            printf '%s' "$TEST_KEY" | base64 --decode > "$HOME/.android/debug.keystore"
             chmod 600 "$HOME/.android/debug.keystore"
-            echo 'Using stable test signing key from GitHub Secrets.'
           else
-            echo 'WARNING: using ephemeral debug signing key. Fresh wipe only; existing installs cannot be updated.'
+            echo 'Ephemeral debug key: fresh factory wipe required.'
           fi
 
-      - name: Compile Helper APK
+      - name: Compile single All-In-One APK
         shell: bash
         run: |
           set -euo pipefail
-          gradle --no-daemon -p android/retail-helper :app:assembleDebug
-          test -s android/retail-helper/app/build/outputs/apk/debug/app-debug.apk
+          test -f android/retail-dpc/app/src/main/java/com/example/retaildpc/demo/RetailAutomationService.java
+          gradle --no-daemon -p android/retail-dpc :app:assembleDebug
           mkdir -p "provisioning/ci/${GITHUB_RUN_ID}" output
-          cp android/retail-helper/app/build/outputs/apk/debug/app-debug.apk "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
-          echo "HELPER_SHA=$(sha256sum "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          cp android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk "provisioning/ci/${GITHUB_RUN_ID}/RetailSetup.apk"
+          cp "provisioning/ci/${GITHUB_RUN_ID}/RetailSetup.apk" output/RetailSetup.apk
 
-      - name: Commit immutable helper asset and remember its Git commit
+      - name: Verify APK and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          apksigner verify --verbose --print-certs output/RetailSetup.apk
+          aapt dump badging output/RetailSetup.apk | grep -E '^package:|^application-label:'
+          sha256sum output/RetailSetup.apk > output/SHA256SUMS.txt
+
+      - name: Pin immutable APK URL
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
-          git commit -m "CI ${GITHUB_RUN_ID}: stage signed Helper APK"
+          git add "provisioning/ci/${GITHUB_RUN_ID}/RetailSetup.apk"
+          git commit -m "CI ${GITHUB_RUN_ID}: stage signed Retail Setup All-In-One APK"
           git push origin HEAD:main
-          HELPER_COMMIT="$(git rev-parse HEAD)"
-          echo "HELPER_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${HELPER_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" >> "$GITHUB_ENV"
+          C="$(git rev-parse HEAD)"
+          echo "BUILD_SHA=$C" >> "$GITHUB_ENV"
+          echo "RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/$C/provisioning/ci/${GITHUB_RUN_ID}/RetailSetup.apk" >> "$GITHUB_ENV"
 
-      - name: Pin exact helper URL and SHA for DPC build
+      - name: Publish one-APK release
         shell: bash
-        run: |
-          set -euo pipefail
-          {
-            printf 'helper.url=%s\n' "$HELPER_RAW_URL"
-            printf 'helper.sha256=%s\n' "$HELPER_SHA"
-          } > android/retail-dpc/helper-apk.properties
-          grep -Fx "helper.sha256=${HELPER_SHA}" android/retail-dpc/helper-apk.properties
-
-      - name: Compile DPC APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          gradle --no-daemon -p android/retail-dpc :app:assembleDebug
-          test -s android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk
-          cp android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
-
-      - name: Verify both APK signatures are valid and match
-        shell: bash
-        run: |
-          set -euo pipefail
-          HELPER_APK="provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk"
-          DPC_APK="provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
-          apksigner verify --verbose --print-certs "$HELPER_APK" > /tmp/helper-certs.txt
-          apksigner verify --verbose --print-certs "$DPC_APK" > /tmp/dpc-certs.txt
-          H="$(sed -n 's/.*Signer #1 certificate SHA-256 digest: //p' /tmp/helper-certs.txt | head -1)"
-          D="$(sed -n 's/.*Signer #1 certificate SHA-256 digest: //p' /tmp/dpc-certs.txt | head -1)"
-          test -n "$H" && test "$H" = "$D" || {
-            echo 'DPC and Helper certificate mismatch: refusing publication.'
-            exit 1
-          }
-          echo "Matching Android signing certificate: $D"
-          echo 'Both APK signatures verified and matched.'
-
-      - name: Commit immutable DPC and release manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk"
-          git commit -m "CI ${GITHUB_RUN_ID}: stage signed DPC APK"
-          git push origin HEAD:main
-          DPC_COMMIT="$(git rev-parse HEAD)"
-          echo "DPC_COMMIT=$DPC_COMMIT" >> "$GITHUB_ENV"
-          echo "DPC_RAW_URL=https://raw.githubusercontent.com/pitsmich-netizen/retailmode/${DPC_COMMIT}/provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" >> "$GITHUB_ENV"
-          cp "provisioning/ci/${GITHUB_RUN_ID}/RetailHelper.apk" output/RetailHelper.apk
-          cp "provisioning/ci/${GITHUB_RUN_ID}/RetailDcp.apk" output/RetailDcp.apk
-          (cd output && sha256sum RetailDcp.apk RetailHelper.apk > SHA256SUMS.txt)
-
-      - name: Publish auto-generated test prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
           set -euo pipefail
-          printf 'DPC_RAW_URL=%s\nDPC_SHA256=%s\nHELPER_RAW_URL=%s\nHELPER_SHA256=%s\n' \
-            "$DPC_RAW_URL" "$(sha256sum output/RetailDcp.apk | cut -d' ' -f1)" \
-            "$HELPER_RAW_URL" "$HELPER_SHA" > output/DEPLOYMENT.txt
+          SHA="$(sha256sum output/RetailSetup.apk | cut -d' ' -f1)"
+          printf 'RETAIL_SETUP_RAW_URL=%s\nRETAIL_SETUP_SHA256=%s\n' "$RAW_URL" "$SHA" > output/DEPLOYMENT.txt
           gh release create "ci-build-${GITHUB_RUN_ID}" \
-            output/RetailDcp.apk output/RetailHelper.apk output/SHA256SUMS.txt output/DEPLOYMENT.txt \
-            --target "$DPC_COMMIT" \
-            --title "Retail CI ${GITHUB_RUN_ID} — experimental DPC + Helper" \
-            --notes 'Automatically compiled and signed test APKs. Device Owner/Accessibility flow has not been tested on a handset. If no stable signing-key secret is configured, a fresh device wipe is required for installation and updates are not supported. No Wi-Fi QR secrets included.' \
+            output/RetailSetup.apk output/SHA256SUMS.txt output/DEPLOYMENT.txt \
+            --target "$BUILD_SHA" \
+            --title "Retail Setup All-In-One CI ${GITHUB_RUN_ID}" \
+            --notes 'Single Android DPC APK with dark UI and built-in demo automation. Experimental; physical Samsung testing required. No Wi-Fi/retail passwords in release.' \
             --prerelease
 
-      - name: Upload CI build artifacts
+      - name: Upload build artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: retail-android-ci-${{ github.run_id }}
+          name: retail-setup-${{ github.run_id }}
           path: output/
           if-no-files-found: ignore
