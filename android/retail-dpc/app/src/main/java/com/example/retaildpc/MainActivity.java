@@ -76,7 +76,9 @@ public class MainActivity extends Activity {
         State.log(this,"Retail Setup UI otwarty; wersja " + BuildConfig.VERSION_NAME
             + "; action=" + getIntent().getAction());
         if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))Scheduler.schedule(this);
-        refresh();
+        // PIN screen intentionally has no setup controls: do not refresh
+        // MainActivity views before the user unlocks the service panel.
+        if (start != null) refresh();
     }
     private void showServicePin() {
         servicePanelUnlocked = false;
