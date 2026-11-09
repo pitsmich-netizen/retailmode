@@ -99,6 +99,7 @@ final class DpcProgress {
                 ?new Notification.Builder(c,CHANNEL):new Notification.Builder(c);
             b.setSmallIcon(R.drawable.retail_progress)
                 .setContentTitle(title).setContentText(message)
+                .setSubText("Retail Setup All-in-One • 0.11.1")
                 .setOnlyAlertOnce(true).setOngoing(true)
                 .setCategory(Notification.CATEGORY_STATUS).setShowWhen(false);
             if(id==PROGRESS_ID){

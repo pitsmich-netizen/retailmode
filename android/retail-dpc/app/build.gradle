@@ -25,6 +25,9 @@ android {
     }
     namespace 'com.example.retaildpc'
     compileSdk 36
+    buildFeatures {
+        buildConfig true
+    }
     defaultConfig {
         applicationId 'com.example.retaildpc'
         minSdk 31

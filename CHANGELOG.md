@@ -9,6 +9,7 @@
 - Na ciemnym ekranie i w diagnostyce widać dokładny numer wersji 0.11.1.
 - Bez zmian w SHA-256 Retail Mode, Wi-Fi, danych sklepu, automatyzacji, ręcznej zgodzie Accessibility i sekwencji zwalniania Device Owner. Nie włączano twardego kiosku.
 - Wymaga testu na fizycznym Galaxy S26 po pełnym provisioningu nowym QR.
+- Poprawiono błąd kompilatora w pierwszej próbie 0.11.1: po wcześniejszym odchudzeniu Gradle trzeba jawnie włączyć `buildFeatures.buildConfig`, aby wyświetlać wersję APK. Dodano testy CI manifestu: wymagane komponenty DPC/Accessibility, brak Helpera, dokładnie jeden APK.
 
 ## 2026-11-09 — Retail Setup 0.11.0-ci: All-In-One (eksperyment)
 

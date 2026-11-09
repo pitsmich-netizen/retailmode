@@ -85,6 +85,17 @@ jobs:
           set -euo pipefail
           apksigner verify --verbose --print-certs output/RetailSetup.apk
           aapt dump badging output/RetailSetup.apk | grep -E '^package:|^application-label:'
+          test "$(find output -maxdepth 1 -name '*.apk' | wc -l)" -eq 1
+          aapt dump xmltree output/RetailSetup.apk AndroidManifest.xml > /tmp/retail-setup-manifest.txt
+          grep -F 'com.example.retaildpc' /tmp/retail-setup-manifest.txt >/dev/null
+          grep -F 'AdminReceiver' /tmp/retail-setup-manifest.txt >/dev/null
+          grep -F 'RetailAutomationService' /tmp/retail-setup-manifest.txt >/dev/null
+          grep -F 'PROVISIONING_SUCCESSFUL' /tmp/retail-setup-manifest.txt >/dev/null
+          if grep -F 'com.example.retailhelper' /tmp/retail-setup-manifest.txt; then
+            echo 'ERROR: Helper is still referenced in All-In-One manifest'
+            exit 1
+          fi
+          echo 'VERIFIED: one All-In-One APK, DPC and Accessibility components, provisioning activity, no Helper references.'
           sha256sum output/RetailSetup.apk > output/SHA256SUMS.txt
 
       - name: Pin immutable APK URL
