@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.8",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.9",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -299,17 +299,38 @@ public class MainActivity extends Activity {
                 .setPositiveButton("OK",null).show();
             return;
         }
+        // Use the original QR password from Android Keystore when available.
+        // If it expired or could not be secured, provide a password input
+        // directly in this retry dialog, not a hidden/remote settings field.
+        final boolean remembered=RetryRetailCredential.available(this);
+        final EditText input=new EditText(this);
+        input.setSingleLine(true);
+        input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setHint(remembered?"Opcjonalnie: nowe hasło Retail Mode"
+            :"Wpisz hasło Retail Mode (dla pełnego automatu)");
+        int margin=dp(22);
+        LinearLayout form=column();
+        form.setPadding(margin,dp(5),margin,0);
+        form.addView(input,new LinearLayout.LayoutParams(-1,dp(58)));
         new AlertDialog.Builder(this)
             .setTitle("Ponowić samą rejestrację?")
-            .setMessage("Nie pobiorę ponownie APK ani nie zresetuję telefonu. " +
-                "Najpierw sprawdzę, czy Retail Mode sam potwierdza rejestrację lub pobieranie.\n\n" +
-                "Aby automatycznie wpisać hasło Retail Mode, wpisz je wcześniej " +
-                "w polu „Hasło Retail Mode” w opcjach zaawansowanych. " +
+            .setMessage("Bez ponownej instalacji APK i bez resetowania telefonu. " +
+                "Automat najpierw sprawdzi stan rejestracji.\n\n" +
+                (remembered
+                    ?"Hasło Retail Mode z QR jest zapisane szyfrowane i zostanie użyte automatycznie. "
+                    :"Hasło z QR jest niedostępne lub wygasło. Możesz podać je poniżej. ") +
                 "PIN 5444 służy wyłącznie do panelu serwisowego.")
+            .setView(form)
             .setNegativeButton("Anuluj",null)
             .setPositiveButton("Ponów rejestrację",(dialog,which)->{
-                String secret=password.getText().toString();
+                String typed=input.getText().toString();
+                String previous=password.getText().toString();
+                input.getText().clear();
                 password.getText().clear();
+                String secret=!typed.isEmpty()?typed:!previous.isEmpty()?previous:
+                    RetryRetailCredential.read(this);
+                if(secret==null)secret="";
+                if(!secret.isEmpty())RetryRetailCredential.save(this,secret);
                 try{
                     DemoUiBridge.retryRegistration(this,model.getText().toString(),
                         StoreSelection.country(this),StoreSelection.partner(this),
@@ -325,6 +346,9 @@ public class MainActivity extends Activity {
         String secret=QrRetailCredential.read(this);
         if((secret==null||secret.isEmpty())&&password.length()>0)
             secret=password.getText().toString();
+        // Save a separately encrypted short-lived copy for explicit retries.
+        // The QR handoff credential is still immediately cleared afterwards.
+        if(secret!=null&&!secret.isEmpty())RetryRetailCredential.save(this,secret);
         QrRetailCredential.clear(this);password.getText().clear();
         try{
             DemoUiBridge.prepare(this,model.getText().toString(),

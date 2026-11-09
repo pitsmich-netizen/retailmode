@@ -1,5 +1,6 @@
 package com.example.retaildpc.demo;
 
+import com.example.retaildpc.RetryRetailCredential;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -28,6 +29,7 @@ final class CompletionHider {
         return prefs(c).getString("detail", "Nie zakończono konfiguracji");
     }
     static void markAlreadyConfigured(Context c,boolean downloading) {
+        RetryRetailCredential.clear(c);
         prefs(c).edit().putBoolean("download_ack",true)
             .putLong("download_ack_at",System.currentTimeMillis())
             .putString("registration_state",downloading?"downloading":"registered")
@@ -37,6 +39,7 @@ final class CompletionHider {
             .commit();
     }
     static void markDownloadAcknowledged(Context c) {
+        RetryRetailCredential.clear(c);
         prefs(c).edit().putBoolean("download_ack", true)
             .putLong("download_ack_at", System.currentTimeMillis())
             .putString("detail", "Pobieranie demo rozpoczęte; chowam ikonę Retail Setup")

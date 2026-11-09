@@ -1,4 +1,4 @@
-# Retail Setup 0.11.8-ci — All-In-One
+# Retail Setup 0.11.9-ci — All-In-One
 
 Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 
@@ -36,3 +36,11 @@ To prototyp do testów na uprawnionym, możliwym do zresetowania Samsungu. Wersj
 - Potwierdzona lokalnie rejestracja blokuje ponowienie, by nie naruszyć działającego demo.
 - Przed klikaniem formularza Accessibility analizuje wyłącznie widoczne komunikaty Samsung Retail Mode, które jednoznacznie wskazują na rejestrację lub pobieranie. Wówczas pomija formularz, zapisuje status i wyłącza Accessibility. Ekran główny, obecność APK lub niejednoznaczny tekst nie są dowodem ukończenia rejestracji.
 - Wobec braku udokumentowanego API Samsunga do odczytu rejestracji detekcja jest ostrożna i zależy od wersji UI. Wymaga testu na S26.
+
+## 0.11.9: hasło z QR przy ponowieniu rejestracji
+
+- Retail Mode password przekazane przez QR jest jednorazowo kopiowane do osobnego sejfu AndroidKeyStore AES-GCM na potrzeby **świadomie wybranego** «Ponów samą rejestrację».
+- Hasło QR w pierwotnym schowku jest usuwane tak jak dotychczas. Zaszyfrowana kopia wygasa po 72 godzinach i jest automatycznie trwale usuwana po potwierdzonym rozpoczęciu pobierania lub wcześniejszej rejestracji Retail Mode.
+- Gdy szyfrowanie lub odczyt nie są możliwe, okno ponowienia ma pole do ręcznego wpisania hasła. Wybór pustego pola nie udaje trybu pełnego.
+- PIN 5444 do panelu serwisowego **nie jest** hasłem Retail Mode. Hasło do rejestracji nie pojawia się w logach, UI ani repozytorium.
+- Logika automatyzacji i wykrywania ukończonego demo z 0.11.8 bez zmian. Wymaga potwierdzenia na Galaxy S26.

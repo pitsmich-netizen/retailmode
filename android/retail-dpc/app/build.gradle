@@ -32,8 +32,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 46
-        versionName '0.11.8-ci-registration-retry-detection'
+        versionCode 47
+        versionName '0.11.9-ci-encrypted-registration-retry'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
