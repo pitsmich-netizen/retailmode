@@ -37,13 +37,21 @@ public final class MainActivity extends Activity {
     private EditText model,site,password;
     private LinearLayout extra;
     private boolean busy,optionsShown;
+    private long lastReleaseAttemptAt = 0L;
+    private TextView accessibilityHint;
     private final Runnable update=new Runnable(){
         @Override public void run(){
             if(isFinishing()||isDestroyed())return;
             refresh();
-            if(pressed()&&State.installed(MainActivity.this)
-                    &&!SingleAppOwnerRelease.released(MainActivity.this)&&!busy)
+            // Preparing the handset must be automatic; START is only for demo.
+            // Throttle retries if Samsung temporarily rejects owner release.
+            long now = android.os.SystemClock.elapsedRealtime();
+            if(State.installed(MainActivity.this)
+                    &&SingleAppOwnerRelease.isOwner(MainActivity.this)
+                    &&!busy&&now-lastReleaseAttemptAt>6000L){
+                lastReleaseAttemptAt=now;
                 releaseAndContinue(false);
+            }
             handler.postDelayed(this,850);
         }
     };
@@ -89,7 +97,7 @@ public final class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP    •    0.11.1",14,BLUE,true);gap(page,14);
+        text(page,"RETAIL  /  SETUP    •    0.11.2",14,BLUE,true);gap(page,14);
         text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
@@ -107,6 +115,14 @@ public final class MainActivity extends Activity {
         gap(page,21);
         storeInfo=text(page,"",13,MUTED,false);gap(page,10);
         start=button(page,"START",BLUE);start.setOnClickListener(v->startPressed());
+        start.setEnabled(false);
+        start.setAlpha(0.48f);
+        gap(page,10);
+        accessibilityHint=text(page,
+            "Po naciśnięciu START otworzą się ustawienia Dostępności. " +
+            "Wybierz Zainstalowane aplikacje → Retail Setup — automatyzacja demo → Włącz. " +
+            "Potwierdź zgodę, a konfiguracja wznowi się automatycznie.",
+            13,MUTED,false);
         gap(page,13);
         options=button(page,"Opcje zaawansowane  ▾",PANEL);
         options.setOnClickListener(v->{
@@ -142,28 +158,26 @@ public final class MainActivity extends Activity {
                 DpcProgress.lastSetupDiagnostic(this)+"\n"+
                 State.logs(this)+"\n"+DemoUiBridge.logs(this)));
         });
-        button(extra,"Awaryjnie przywróć pulpit Androida",PANEL).setOnClickListener(v->
+        button(extra,"Wyjdź na pulpit Androida",PANEL).setOnClickListener(v -> {
+            // Safe at any stage: restore One UI and keep downloading in the background.
+            boolean ok=RetailHomePolicy.exitToAndroidHome(this);
+            if(!ok) title.setText("Nie otwarto pulpitu — sprawdź diagnostykę");
+        });
+        button(extra,"Awaryjnie zwolnij Device Owner",PANEL).setOnClickListener(v->
             new AlertDialog.Builder(this)
-                .setTitle("Wyjście awaryjne")
-                .setMessage("Zwolnić Device Owner i przywrócić pulpit? " +
-                    "To kończy możliwość instalacji jako administrator bez nowego QR.")
+                .setTitle("Awaryjne zakończenie zarządzania")
+                .setMessage("Zwolnić administratora przed zakończeniem konfiguracji? " +
+                    "Instalacja może zostać przerwana i wymagany będzie kolejny reset/QR.")
                 .setNegativeButton("Anuluj",null)
-                .setPositiveButton("Przywróć",(d,w)->releaseAndContinue(true)).show());
+                .setPositiveButton("Zwolnij",(d,w)->releaseAndContinue(true)).show());
         setContentView(scroll);
     }
-    private boolean pressed(){
-        return getSharedPreferences(PREF,MODE_PRIVATE).getBoolean("start",false);
-    }
-    private void markPressed(boolean value){
-        getSharedPreferences(PREF,MODE_PRIVATE).edit().putBoolean("start",value).commit();
-    }
     private void startPressed(){
-        if(DemoUiBridge.completed(this))return;
-        markPressed(true);
-        if(!SingleAppOwnerRelease.released(this)){
-            if(!State.installed(this))Scheduler.schedule(this);
-            else releaseAndContinue(false);
-        }else continueDemo();
+        // A click during provisioning must never release DO or skip install.
+        if(busy || !State.installed(this) || !SingleAppOwnerRelease.released(this)
+                || DemoUiBridge.completed(this) || DemoUiBridge.active(this)
+                || DemoUiBridge.pending(this)) return;
+        continueDemo();
         refresh();
     }
     private void releaseAndContinue(boolean emergency){
@@ -175,14 +189,13 @@ public final class MainActivity extends Activity {
                 busy=false;refresh();
                 if(emergency){
                     if(success){
-                        markPressed(false);
-                        Intent home=new Intent(Intent.ACTION_MAIN);
-                        home.addCategory(Intent.CATEGORY_HOME);
-                        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(home);
-                    }else title.setText("Błąd przywrócenia pulpitu — zobacz diagnostykę");
-                }else if(success)continueDemo();
-                else title.setText("Nie udało się zwolnić DPC — zobacz diagnostykę");
+                        if(!RetailHomePolicy.exitToAndroidHome(this))
+                            title.setText("Nie otwarto pulpitu — sprawdź diagnostykę");
+                    }else title.setText("Nie udało się zwolnić Device Ownera — diagnostyka");
+                }else if(!success) {
+                    title.setText("Nie udało się zwolnić Device Ownera — diagnostyka");
+                }
+                // START is deliberately NOT pressed automatically after release.
             });
         },"retail-release-owner").start();
     }
@@ -208,7 +221,7 @@ public final class MainActivity extends Activity {
         boolean released=SingleAppOwnerRelease.released(this);
         boolean done=DemoUiBridge.completed(this);
         boolean active=DemoUiBridge.active(this);
-        boolean waiting=DemoUiBridge.status(this).startsWith("Włącz Retail Setup");
+        boolean waiting=DemoUiBridge.pending(this);
         if(done)title.setText("Demo gotowe");
         else if(active)title.setText("Konfiguruję Retail Mode");
         else if(waiting)title.setText("Włącz usługę Dostępności");
@@ -226,13 +239,25 @@ public final class MainActivity extends Activity {
             done?"Zakończono":installed?"APK zainstalowane":"");
         storeInfo.setText("Model: "+DemoUiBridge.detectModel(this)+
             "     Sklep: "+StoreSelection.site(this));
-        if(done){start.setText("GOTOWE");start.setEnabled(false);}
-        else if(busy){start.setText("PRZYGOTOWUJĘ…");start.setEnabled(false);}
-        else if(pressed()&&!released){start.setText(installed?
-                "ZWALNIAM ADMINISTRATORA…":"PRZYGOTOWUJĘ…");start.setEnabled(false);}
-        else if(released&&(active||waiting)){
-            start.setText("TRWA KONFIGURACJA DEMO");start.setEnabled(false);
-        }else{start.setText("START");start.setEnabled(true);}
+        boolean ready = installed && released && !busy && !done && !active && !waiting;
+        if(done)start.setText("GOTOWE");
+        else if(busy||installed&&!released)start.setText("KOŃCZĘ PRZYGOTOWANIE…");
+        else if(!installed)start.setText("PRZYGOTOWUJĘ…");
+        else if(active||waiting)start.setText("TRWA KONFIGURACJA…");
+        else start.setText("START");
+        start.setEnabled(ready);
+        start.setAlpha(ready ? 1f : 0.48f);
+        accessibilityHint.setVisibility(done || active ? View.GONE : View.VISIBLE);
+        if(!released || !installed)
+            accessibilityHint.setText("START będzie dostępny po instalacji Retail Mode " +
+                "i zwolnieniu administratora. Następnie pokażemy, jak włączyć Dostępność.");
+        else if(waiting)
+            accessibilityHint.setText("W ustawieniach wybierz Zainstalowane aplikacje → " +
+                "Retail Setup — automatyzacja demo → Włącz, potwierdź zgodę i wróć.");
+        else
+            accessibilityHint.setText("Po START otworzą się ustawienia Dostępności. " +
+                "Wybierz Zainstalowane aplikacje → Retail Setup — automatyzacja demo → Włącz. " +
+                "Potwierdź zgodę, a konfiguracja wznowi się automatycznie.");
         if(report.getVisibility()==View.VISIBLE)
             report.setText("Wersja: "+BuildConfig.VERSION_NAME+"\nDevice Owner: "+owner+"\nRetail APK: "+installed+
                 "\n\n"+DpcProgress.lastSetupDiagnostic(this)+

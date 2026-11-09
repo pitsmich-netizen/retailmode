@@ -29,10 +29,14 @@ final class SingleAppOwnerRelease {
         DevicePolicyManager dpm=c.getSystemService(DevicePolicyManager.class);
         if(dpm==null)return false;
         ComponentName admin=new ComponentName(c,AdminReceiver.class);
-        if(released(c))return true;
+        if(released(c)){
+            RetailHomePolicy.disableHomeAlias(c);
+            return true;
+        }
         try{
             if(dpm.isDeviceOwnerApp(c.getPackageName())){
                 RetailHomePolicy.clear(c); // BEFORE clearDeviceOwnerApp()
+                RetailHomePolicy.disableHomeAlias(c); // Do not leave our HOME handler active
                 c.getSharedPreferences(P,Context.MODE_PRIVATE).edit()
                     .putBoolean("release_prepared",true).commit();
                 JobScheduler js=c.getSystemService(JobScheduler.class);

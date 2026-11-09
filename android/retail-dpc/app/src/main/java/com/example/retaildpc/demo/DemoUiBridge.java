@@ -16,6 +16,7 @@ public final class DemoUiBridge {
         return PendingStart.accessibilityEnabled(c);
     }
     public static boolean active(Context c) { return AutomationState.active(c); }
+    public static boolean pending(Context c) { return PendingStart.armed(c); }
     public static boolean completed(Context c) { return CompletionHider.downloadAcknowledged(c); }
     public static String status(Context c) {
         if (completed(c)) return "Pobieranie demo rozpoczęte. Dostępność została wyłączona.";

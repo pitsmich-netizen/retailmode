@@ -1,4 +1,4 @@
-# Retail Setup 0.11.1-ci — All-In-One
+# Retail Setup 0.11.2-ci — All-In-One
 
 Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 
@@ -6,7 +6,7 @@ Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retai
 
 - QR uruchamia provisioning Device Owner i przekazuje lokalne parametry Wi-Fi, sklepu i hasło demo. Dane poufne nie są publikowane w repo.
 - Retail Setup po zakończeniu provisioningu korzysta z `ACTION_PROVISIONING_SUCCESSFUL`, jawnego otwarcia po gotowości flag Androida oraz tymczasowego HOME (z powiadomieniem jako fallback); wyświetla ciemny interfejs, bieżące etapy przygotowania i procent pobierania zweryfikowanego APK Samsung Retail Mode.
-- **START** zapamiętuje polecenie nawet jeśli pobieranie jeszcze trwa. Po instalacji, bez dodatkowego Helpera, aplikacja przywraca zwykły HOME, zwalnia Device Owner i administratora i przechodzi do uruchamiania demo.
+- START jest niedostępny, dopóki nie zakończy się instalacja Retail Mode i aplikacja automatycznie nie zwolni Device Ownera oraz administratora. Dopiero wtedy START otwiera instrukcję i ekran zgody Accessibility. Wyjście na zwykły pulpit w Zaawansowanych nie przerywa instalowania APK.
 - Użytkownik ręcznie zatwierdza usługę Accessibility aplikacji Retail Setup w ustawieniach Androida; aplikacja nie próbuje omijać zgody.
 - Wbudowany automat wybiera kraj, partnera, sklep, hasło i zgodny profil Experience. Po wykryciu realnego początku pobierania demonstracji wyłącza Accessibility i pozostaje bez ikony.
 - Aplikacja nadal jest widoczna w systemowym **Ustawienia → Aplikacje**. Nie jest odinstalowywana.

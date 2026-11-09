@@ -1,5 +1,15 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.2-ci: START gated, pulpitu awaryjny i Accessibility hint
+
+- START wyłączony i wyszarzony do **zakończenia pobierania/instalacji Retail Mode ORAZ faktycznego zwolnienia Device Ownera i aktywnego administratora**. Nie można go nacisnąć za wcześnie.
+- Zwolnienie Device Ownera jest automatycznie rozpoczynane z widocznego ekranu Retail Setup, kiedy PackageInstaller potwierdzi instalację; START nie zwalnia Device Ownera ani nie uruchamia się sam.
+- Nowy bezpieczny przycisk «Wyjdź na pulpit Androida» w Zaawansowanych: kasuje preferowaną aktywność HOME, wyłącza alias HOME, zapobiega ponownemu narzuceniu HOME i uruchamia zwykły launcher, **bez zatrzymania pobierania i bez pozbawienia aplikacji Device Ownera**.
+- Osobna awaryjna opcja «Zwolnij Device Owner» po świadomym potwierdzeniu; po zwolnieniu również przechodzi na pulpit.
+- Pod START umieszczono krótki tekst informacyjny o włączeniu Accessibility: Zainstalowane aplikacje → Retail Setup — automatyzacja demo → Włącz. Komunikat zmienia się w zależności od etapu.
+- Dostępny dotychczasowy ciemny UI, pasek pobierania APK i powiadomienia systemowe. Brak instruktażowych toastów.
+- Nadal wymaga sprawdzenia na fizycznym S26: automatyczny release, szary START, działanie przycisku wyjścia, powrót przez powiadomienie, Accessibility i demo.
+
 ## 2026-11-09 — Retail Setup 0.11.1-ci: niezawodniejsze uruchamianie interfejsu
 
 - Audyt QR All-In-One 0.11.0: wskazuje wyłącznie podpisany RetailSetup.apk (SHA-256 poprawne), nie ma instalatora ani pakietu Helpera w nowym kodzie.

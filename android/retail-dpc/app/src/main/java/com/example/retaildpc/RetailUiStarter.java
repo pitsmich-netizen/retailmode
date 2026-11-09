@@ -17,7 +17,8 @@ final class RetailUiStarter {
     private RetailUiStarter() { }
 
     static synchronized void tryOpen(Context c, String reason) {
-        if (!SingleAppOwnerRelease.isOwner(c) || SingleAppOwnerRelease.blocked(c)) return;
+        if (!SingleAppOwnerRelease.isOwner(c) || SingleAppOwnerRelease.blocked(c)
+                || RetailHomePolicy.manualExitRequested(c)) return;
         boolean provisioned = Settings.Global.getInt(c.getContentResolver(),
             Settings.Global.DEVICE_PROVISIONED, 0) == 1;
         boolean setupDone = Settings.Secure.getInt(c.getContentResolver(),
