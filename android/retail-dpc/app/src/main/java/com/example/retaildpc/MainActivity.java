@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.9",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.10",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -185,6 +185,8 @@ public class MainActivity extends Activity {
         });
         button(extra,"Ponów samą rejestrację Retail Mode",PANEL)
             .setOnClickListener(v->retryRegistrationPressed());
+        button(extra,"Brakujące aplikacje • oficjalne sklepy",PANEL)
+            .setOnClickListener(v->MissingAppsCatalog.open(this));
         button(extra,"Pokaż raport aplikacji fabrycznych",PANEL).setOnClickListener(v->{
             boolean visible=stockAppsReport.getVisibility()==View.VISIBLE;
             stockAppsReport.setVisibility(visible?View.GONE:View.VISIBLE);

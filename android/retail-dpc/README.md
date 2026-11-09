@@ -1,4 +1,4 @@
-# Retail Setup 0.11.9-ci — All-In-One
+# Retail Setup 0.11.10-ci — All-In-One
 
 Pakiet Android: `com.example.retaildpc`. **Jeden APK.** Nie ma oddzielnego Retail Helpera.
 
@@ -44,3 +44,10 @@ To prototyp do testów na uprawnionym, możliwym do zresetowania Samsungu. Wersj
 - Gdy szyfrowanie lub odczyt nie są możliwe, okno ponowienia ma pole do ręcznego wpisania hasła. Wybór pustego pola nie udaje trybu pełnego.
 - PIN 5444 do panelu serwisowego **nie jest** hasłem Retail Mode. Hasło do rejestracji nie pojawia się w logach, UI ani repozytorium.
 - Logika automatyzacji i wykrywania ukończonego demo z 0.11.8 bez zmian. Wymaga potwierdzenia na Galaxy S26.
+
+## 0.11.10 — oficjalne sklepy i brakujące aplikacje
+
+- Opcje zaawansowane: «Brakujące aplikacje • oficjalne sklepy». Lista pokazuje pakiety niewykryte lub wyłączone, następnie pozwala otworzyć oficjalną stronę Google Play albo Galaxy Store (Samsung) do świadomej instalacji.
+- Brak instalacji po cichu, nie pobieramy obcych APK, a sklep może wymagać konta i obsługi użytkownika.
+- Samsung Knox KBA (2026-09-01) potwierdza, że Calendar, Clock i Notes na nowszych Galaxy nie są systemowymi APK do przywrócenia przez enableSystemApp. Automatyczna dystrybucja wymaga Managed Google Play/EMM.
+- Zmieniono StockAppRecovery, aby nie wywoływać przewidywalnie błędnej metody dla pakietów niebędących systemowymi. Pozostałe działania, QR, panel z PIN oraz rejestracja bez zmian.

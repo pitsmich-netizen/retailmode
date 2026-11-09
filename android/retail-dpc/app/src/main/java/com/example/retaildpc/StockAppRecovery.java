@@ -53,6 +53,9 @@ final class StockAppRecovery {
             if ("ZAINSTALOWANA".equals(before)) {
                 already++;
                 result = "już dostępna";
+            } else if (!isFactorySystemApp(pm,pkg)) {
+                absent++;
+                result = "aplikacja sklepowa lub pakiet nieobecny; użyj oficjalnego sklepu";
             } else {
                 try {
                     // Public DPM method can only restore a factory system
@@ -86,6 +89,15 @@ final class StockAppRecovery {
         State.log(c, "StockAppRecovery: " + summary);
     }
 
+    private static boolean isFactorySystemApp(PackageManager pm,String pkg){
+        try{
+            ApplicationInfo i=pm.getApplicationInfo(pkg,
+                PackageManager.MATCH_UNINSTALLED_PACKAGES);
+            return (i.flags & (ApplicationInfo.FLAG_SYSTEM |
+                ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
+        }catch(RuntimeException e){return false;}
+        catch(PackageManager.NameNotFoundException e){return false;}
+    }
     private static String state(PackageManager pm, String pkg) {
         try {
             ApplicationInfo app = pm.getApplicationInfo(pkg,
