@@ -1,38 +1,11 @@
 plugins {
     id 'com.android.application'
 }
-def localRetailSecretFile = rootProject.file('retail-test-secret.properties')
-def localRetailSecret = new java.util.Properties()
-if (localRetailSecretFile.exists()) {
-    localRetailSecretFile.withInputStream { localRetailSecret.load(it) }
-}
-def testRetailPassword = localRetailSecret.getProperty('retail.password', '')
-// CI bez lokalnego pliku otrzyma pusty sekret, wymagając ręcznego wpisania na telefonie.
-def escapeBuildConfig = { String value ->
-    return value.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
-}
-// Helper 0.2.9 must be pinned to verified GitHub mirror or release before build.
-// Optional gitignored helper-apk.properties overrides the defaults locally.
-def helperDefaultsFile = rootProject.file('helper-apk.defaults.properties')
-def helperFile = rootProject.file('helper-apk.properties')
-def helperProperties = new java.util.Properties()
-if (!helperDefaultsFile.exists()) throw new GradleException('Brak helper-apk.defaults.properties')
-helperDefaultsFile.withInputStream { helperProperties.load(it) }
-if (helperFile.exists()) helperFile.withInputStream { helperProperties.load(it) }
-def helperUrl = helperProperties.getProperty('helper.url', '').trim()
-def helperSha256 = helperProperties.getProperty('helper.sha256', '').trim().toLowerCase(java.util.Locale.ROOT)
-if (helperSha256 == ('0' * 64) ||
-    !(helperUrl == 'https://raw.githubusercontent.com/pitsmich-netizen/retailmode/main/provisioning/RetailHelper-029.apk' ||
-      (helperUrl.startsWith('https://github.com/pitsmich-netizen/retailmode/releases/download/') &&
-       helperUrl.endsWith('/RetailHelper.apk')) ||
-      (helperUrl ==~ /https:\/\/raw\.githubusercontent\.com\/pitsmich-netizen\/retailmode\/[0-9a-f]{40}\/provisioning\/ci\/[0-9]+\/RetailHelper\.apk/)) || !(helperSha256 ==~ /[0-9a-f]{64}/)) {
-    throw new GradleException('Helper: nieprawidlowy URL lub SHA-256 w konfiguracji projektu')
-}
-// Release-signing is configured ONLY from a local, gitignored file.
-// Do not copy a keystore or passwords into GitHub or into this ZIP.
+// No Helper APK, Helper URL, password or signing secret is embedded in Retail Setup.
 def signingFile = rootProject.file('release-signing.properties')
 def localSigning = new java.util.Properties()
 if (signingFile.exists()) signingFile.withInputStream { localSigning.load(it) }
+
 android {
     signingConfigs {
         release {
@@ -53,18 +26,11 @@ android {
     namespace 'com.example.retaildpc'
     compileSdk 36
     defaultConfig {
-        // To SAMO applicationId co dzialajacy Retail DPC 0.2.
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        buildConfigField 'String', 'LOCAL_TEST_RETAIL_PASSWORD', '"' + escapeBuildConfig(testRetailPassword) + '"'
-        buildConfigField 'String', 'HELPER_URL', '"' + escapeBuildConfig(helperUrl) + '"'
-        buildConfigField 'String', 'HELPER_SHA256', '"' + helperSha256 + '"'
         versionCode 38
         versionName '0.11.0-ci-all-in-one-dark'
-    }
-    buildFeatures {
-        buildConfig true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -72,9 +38,8 @@ android {
     }
 }
 
-// Fail rather than accidentally publish an unsigned release.
 gradle.taskGraph.whenReady { graph ->
     if (graph.hasTask(':app:assembleRelease') && !signingFile.exists()) {
-        throw new GradleException('Brak release-signing.properties. Nie buduj publicznego APK bez podpisu release.')
+        throw new GradleException('Brak release-signing.properties. Nie buduj niepodpisanego release.')
     }
 }

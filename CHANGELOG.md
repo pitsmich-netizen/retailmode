@@ -2,6 +2,8 @@
 
 ## 2026-11-09 — Retail Setup 0.11.0-ci: All-In-One (eksperyment)
 
+- Po pierwszej udanej kompilacji usunięto z aktualnego drzewa 16 nieużywanych klas starego Wrappera i cały moduł Helpera, bez usuwania wcześniejszych wydanych APK/QR. Usunięto też niepotrzebne referencje Gradle do pomocniczego APK.
+
 - Jeden APK łączy Device Owner, instalator Retail Mode i sprawdzoną automatyzację przeniesioną z Helpera do podpakietu demo.
 - Ciemny ekran START, bieżące etapy i prawdziwy procent pobranych danych; zwijane opcje diagnostyczne; brak instruktażowych Toastów w aktywnej ścieżce.
 - Tymczasowy ekran HOME bez Lock Task; przed zwolnieniem Device Owner przywracana zwykła obsługa HOME.

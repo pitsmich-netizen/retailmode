@@ -1,38 +1,32 @@
-# retailmode — Samsung Retail Mode (projekt testowy)
+# Retail Setup — Samsung Galaxy (All-In-One)
 
-Projekt: **DPC Wrapper → Retail Helper → Samsung Retail Mode**, uruchamiany przez QR Device Owner na autoryzowanym urządzeniu testowym.
+**Aktualny test: 0.11.0-ci.** Jedna aplikacja Android zamiast pary DPC + Helper.
 
-## Retail Setup All-In-One (0.11.0-ci — test)
+## Proces na uprawnionym urządzeniu testowym
 
-Jeden APK DPC zawierający własną usługę automatyzacji oraz ciemny interfejs START / Opcje zaawansowane. W trakcie konfiguracji jest tymczasowym ekranem HOME; przed utratą Device Ownera przywraca systemowy HOME. Nie wymaga instalowania drugiego Helpera. Użytkownik ręcznie zatwierdza jedynie zgodę Accessibility.
+1. QR ustawia Wi-Fi, instaluje Retail Setup i nadaje aplikacji rolę Device Owner.
+2. Na końcu kreatora Androida Retail Setup jest tymczasowym ekranem HOME; widoczny jest ciemny interfejs, prawdziwy postęp pobrania Retail Mode i przycisk **START**.
+3. START uruchamia / kontynuuje instalację; po potwierdzeniu zainstalowania Retail Mode wycofuje tymczasowy HOME, anuluje instalator i zwalnia rolę Device Owner oraz administratora.
+4. Ta **sama aplikacja** kontynuuje konfigurację jako normalny APK. Użytkownik świadomie włącza jej usługę Accessibility w Ustawieniach Androida.
+5. Automatyzacja wybiera kraj, partnera, sklep, hasło z QR (jeżeli dostępne) i profil Experience. Po rozpoznaniu rzeczywistego rozpoczęcia pobierania demo usługa Accessibility sama się wyłącza.
+6. Ikona aplikacji jest od początku wyłączona w launcherze; aplikacja pozostaje normalnie widoczna w Ustawienia → Aplikacje.
 
-Wcześniejsze wydania i RAW APK pozostają dostępne do rollbacku; nie usuwać ich bez weryfikacji wszystkich używanych kodów QR.
+Opcje zaawansowane są zwinięte: zmiana modelu, Site ID, opcjonalne hasło ręczne, ponowienie, Wi-Fi, ustawienia Accessibility, diagnostyka, awaryjne przywrócenie pulpitu.
 
-## Aktualna struktura
+**Nie używamy twardego Lock Task/kiosku** w tym pierwszym wydaniu. Tymczasowy HOME można awaryjnie przywrócić przyciskiem w opcjach zaawansowanych.
 
-- `android/retail-dpc/` — źródła Wrappera, który przygotowuje telefon, pobiera pozostałe aplikacje i zwalnia Device Ownera przed uruchomieniem demo.
-- `android/retail-helper/` — źródła Helpera, który po ręcznym nadaniu Dostępności prowadzi konfigurację demo, a następnie wyłącza usługę i ma ukryć ikonę.
-- `provisioning/` — celowo zachowane, wcześniej zweryfikowane APK pod adresami RAW. **Nie usuwać**, bo wcześniejsze kody QR wskazują na te ścieżki.
-- `docs/AUTOMATYZACJA_CI.md` — kompilacja, podpisy i testowe publikacje.
+## Katalogi
 
-## GitHub Actions
+- `android/retail-dpc/` — jedyny aktywnie kompilowany projekt Android. Nowa automatyzacja znajduje się w `.../com/example/retaildpc/demo/`.
+- `provisioning/` — historyczne, przypięte APK, do których mogą nadal odnosić się używane kody QR. **Nie usuwać tych plików.**
+- `docs/` — informacje techniczne i historia projektu.
+- `.github/workflows/retail-build-from-source.yml` — jedyny aktywny build; publikuje pojedynczy `RetailSetup.apk` wraz z SHA-256.
 
-Jedyny aktywny pipeline Android: [Build and publish Retail test APKs from sources](.github/workflows/retail-build-from-source.yml). Po zmianie źródeł automatycznie przygotowuje parę APK, przypina SHA-256 Helpera w DPC i publikuje **testowe** wydanie GitHub Releases z `DEPLOYMENT.txt` oraz linkami RAW.
+Wcześniejszy Helper i klasy starego instalatora zostały usunięte z bieżącej gałęzi. Nadal można je odzyskać z historii Git i starszych Releases.
 
-**Automatyczna kompilacja i publikacja źródłowa zakończyła się sukcesem** w testach [ci-build-42474697059](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-build-42474697059) i [ci-build-42475090083](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-build-42475090083). W obu przypadkach powstały APK, sumy SHA-256 i plik DEPLOYMENT.txt. Były to kompilacje testowe; nie oznaczają potwierdzenia na fizycznym telefonie.
+## Bezpieczeństwo i testowanie
 
-Starszy test automatycznej publikacji istniejących APK również się udał: [ci-smoke-20261108](https://github.com/pitsmich-netizen/retailmode/releases/tag/ci-smoke-20261108).
-
-## Status urządzenia
-
-- Wcześniej sprawdzona baza: **DPC 0.9.5 + Helper 0.2.5** — instalacja, przekazanie sterowania, automatyczna konfiguracja Retail Mode i odinstalowanie DPC z potwierdzeniem.
-- Sprawdzona na S26 baza: **DPC 0.10.4-ci + Helper 0.2.10** (działa Retail Mode, Toasty, usunięcie z potwierdzeniem, wyłączenie Accessibility i brak ikon). Wersja 0.10.5-ci + Helper 0.2.11 również zakończyła aktywację pomyślnie, ale bez poprawy głębokiego skrótu Dostępności. **Najnowsze źródła DPC 0.10.14-ci + Helper 0.2.15**: nowy eksperyment — Wrapper po zakończeniu nie musi być odinstalowany, tylko zwalnia Device Owner/admina i ukrywa ikonę po podpisanym ACK Helpera. Helper wymaga potwierdzenia braku uprawnień admina, a nie fizycznego usunięcia DPC. Tryb expedited i diagnostyka zachowane; wymaga testu na S26.
-- Cicha deinstalacja DPC **nie została osiągnięta**; Android może wyświetlić okno potwierdzenia.
-- Ukrycie ikony Helpera 0.2.9 i pełna stabilność dystrybucji przez RAW wymagają testu S26.
-- Samsung Retail Mode to niezmienione APK `rmtest`, ale pobierane przez **GitHub RAW** (34 MB, z SHA-256 i preflightem CI), aby ominąć błędy 504 pobierania z Releases.
-
-## Bezpieczeństwo
-
-Repozytorium jest **publiczne**. Nie dodawaj tu haseł Wi-Fi, kodów QR zawierających hasło, haseł Retail Mode, plików `.keystore`/`.jks`, prywatnych kluczy ani danych sklepu. Workflow używa wyłącznie testowego podpisywania. Nie jest to wersja produkcyjna.
-
-Historyczne źródła i dokumenty usunięte z bieżącego drzewa pozostają w historii commitów. Starsze Releases zachowano jako punkty odniesienia.
+- Nie umieszczaj Wi-Fi, haseł Samsung Retail Mode, QR zawierających hasła ani keystore w publicznym repozytorium.
+- Wbudowane komponenty aktywują Accessibility **wyłącznie po zgodzie na ekranie Androida**.
+- Używany mechanizm `clearDeviceOwnerApp()` jest przestarzałą funkcją testową i może pozostawiać niektóre polityki. Pełny reset urządzenia jest wymagany przy ponownym wdrażaniu QR Device Owner.
+- Pomyślna kompilacja **nie potwierdza** działania na fizycznym Samsungu S26. Sprawdź działanie HOME, zdjęcie roli DO, UI, demo oraz restart.

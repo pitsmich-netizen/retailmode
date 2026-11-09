@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_description">Testowa usługa automatyzacji: wybiera kraj, partnera i sklep w Samsung Retail Mode. Nie wpisuje haseł, nie zatwierdza aktywacji i nie zbiera danych innych aplikacji.</string>
+    <string name="app_name">Retail Setup</string>
+    <string name="accessibility_description">Retail Setup automatyzuje wyłącznie konfigurację Samsung Retail Mode po świadomym włączeniu tej usługi przez użytkownika. Może odczytywać elementy ekranu i wykonywać kliknięcia w aplikacji Retail Mode. Wyłącza swoją usługę po wykryciu rozpoczęcia pobierania demo.</string>
 </resources>
