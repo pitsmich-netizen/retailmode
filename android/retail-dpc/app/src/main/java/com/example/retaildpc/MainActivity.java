@@ -51,6 +51,8 @@ public final class MainActivity extends Activity {
         super.onCreate(b);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
         draw();
+        State.log(this,"Retail Setup UI otwarty; wersja " + BuildConfig.VERSION_NAME
+            + "; action=" + getIntent().getAction());
         if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))Scheduler.schedule(this);
         refresh();
     }
@@ -87,7 +89,7 @@ public final class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  SETUP",14,BLUE,true);gap(page,14);
+        text(page,"RETAIL  /  SETUP    •    0.11.1",14,BLUE,true);gap(page,14);
         text(page,"Przygotowanie urządzenia",26,WHITE,true);gap(page,8);
         subtitle=text(page,"Instalacja i konfiguracja Samsung Retail Mode",14,MUTED,false);
         gap(page,25);
@@ -232,7 +234,7 @@ public final class MainActivity extends Activity {
             start.setText("TRWA KONFIGURACJA DEMO");start.setEnabled(false);
         }else{start.setText("START");start.setEnabled(true);}
         if(report.getVisibility()==View.VISIBLE)
-            report.setText("Device Owner: "+owner+"\nRetail APK: "+installed+
+            report.setText("Wersja: "+BuildConfig.VERSION_NAME+"\nDevice Owner: "+owner+"\nRetail APK: "+installed+
                 "\n\n"+DpcProgress.lastSetupDiagnostic(this)+
                 "\n\nInstalator:\n"+State.logs(this)+
                 "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this));

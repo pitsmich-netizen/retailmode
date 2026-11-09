@@ -43,6 +43,10 @@ public final class InstallJobService extends JobService {
                         retry = !cancelled && !SingleAppOwnerRelease.blocked(this);
                         State.log(this, "Retail: oczekuję na zakończenie konfiguracji Androida");
                     } else {
+                        // Samsung Setup Wizard may ignore our temporary HOME.
+                        // Once both setup flags are 1, explicitly open the dark
+                        // UI while this application still owns the device.
+                        RetailUiStarter.tryOpen(this, "retail_job_ready");
                         File file = new File(getCacheDir(), "RetailMode-test.apk");
                         downloadWithFastRetry(file);
                         if (!cancelled && !SingleAppOwnerRelease.blocked(this)) {

@@ -15,6 +15,8 @@ public final class InstallResultReceiver extends BroadcastReceiver {
             DpcProgress.stage(c, "retail_installed", "Retail Mode zainstalowany. Kończę przygotowanie…");
             State.log(c, "SUKCES: demo zainstalowano; package=" + State.pkg(c));
             InitialDeviceSetup.grantRetailLocationPermissions(c);
+            // Backup if the OS blocked the earlier activity launch.
+            RetailUiStarter.tryOpen(c, "retail_apk_installed");
         } else if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             DpcProgress.stage(c, "retail_user_confirm", "Instalacja Retail Mode wymaga potwierdzenia");
             State.log(c, "WYMAGA POTWIERDZENIA przez użytkownika: " + detail);

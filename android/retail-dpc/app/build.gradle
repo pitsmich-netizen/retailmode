@@ -29,8 +29,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 38
-        versionName '0.11.0-ci-all-in-one-dark'
+        versionCode 39
+        versionName '0.11.1-ci-provisioning-ui-fix'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

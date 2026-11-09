@@ -48,7 +48,13 @@
             <meta-data android:name="android.accessibilityservice"
                 android:resource="@xml/retail_accessibility"/>
         </service>
-        <activity android:name=".MainActivity" android:exported="true"/>
+        <!-- Android explicitly opens this after successful Device Owner provisioning. -->
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.app.action.PROVISIONING_SUCCESSFUL"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
         <activity-alias android:name=".HomeActivity" android:targetActivity=".MainActivity"
             android:exported="true" android:enabled="true">
             <intent-filter>

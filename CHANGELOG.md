@@ -1,5 +1,15 @@
 # CHANGELOG — retailmode
 
+## 2026-11-09 — Retail Setup 0.11.1-ci: niezawodniejsze uruchamianie interfejsu
+
+- Audyt QR All-In-One 0.11.0: wskazuje wyłącznie podpisany RetailSetup.apk (SHA-256 poprawne), nie ma instalatora ani pakietu Helpera w nowym kodzie.
+- Ustalono błąd: kod wersji 0.11.0 ustanawiał tymczasowe HOME, ale **nigdzie jawnie nie uruchamiał** ekranu START. Na Samsungu S26 HOME nie otwierało się samoczynnie.
+- Dodano obsługę oficjalnej aktywności Androida `ACTION_PROVISIONING_SUCCESSFUL` dla nowego Device Ownera oraz własny zapasowy `RetailUiStarter` po `device_provisioned=1` i `user_setup_complete=1`. Zapasowo pozostaje kliknięcie powiadomienia.
+- Przy końcowej instalacji Retail Mode ponawiana jest próba otwarcia ekranu (ograniczona częstotliwość). DPC nie próbuje przejmować ekranu po zwolnieniu Device Ownera.
+- Na ciemnym ekranie i w diagnostyce widać dokładny numer wersji 0.11.1.
+- Bez zmian w SHA-256 Retail Mode, Wi-Fi, danych sklepu, automatyzacji, ręcznej zgodzie Accessibility i sekwencji zwalniania Device Owner. Nie włączano twardego kiosku.
+- Wymaga testu na fizycznym Galaxy S26 po pełnym provisioningu nowym QR.
+
 ## 2026-11-09 — Retail Setup 0.11.0-ci: All-In-One (eksperyment)
 
 - Powiadomienie pobierania jest również klikalnym wejściem do ekranu START, na wypadek gdy Samsung nie wyświetli tymczasowego HOME po kreatorze.
