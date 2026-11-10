@@ -32,8 +32,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 55
-        versionName '0.11.17-ci-consumer-setup-baseline'
+        versionCode 56
+        versionName '0.11.18-ci-play-version-audit'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
