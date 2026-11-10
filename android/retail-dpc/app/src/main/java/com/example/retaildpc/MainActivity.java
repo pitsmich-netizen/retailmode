@@ -137,13 +137,13 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.12",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.13",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
         text(page,"Ten tryb nie pobiera Retail Mode ani zawartości Experience. " +
-            "Próba przywrócenia fabrycznych pakietów działa tylko podczas " +
-            "aktywnego Device Owner. Zakończ test, gdy zapiszesz raport.",
+            "DPC próbuje teraz odzyskać brakujące pakiety systemowe nawet, " +
+            "gdy nie są widoczne w PackageManager. Zapisz raport przed końcem testu.",
             14,MUTED,false);
         gap(page,18);
         button(page,"PONÓW AUDYT BRAKUJĄCYCH APLIKACJI",BLUE)
@@ -154,6 +154,13 @@ public class MainActivity extends Activity {
                     runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
                 },"diagnostic-repeat").start();
             });
+        button(page,"PONÓW PRÓBY PRZYWRACANIA",BLUE).setOnClickListener(v -> {
+            diagnosticResult.setText("Ponawiam próby odzyskania aplikacji…");
+            new Thread(() -> {
+                DiagnosticMode.retryRestore(getApplicationContext());
+                runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
+            }, "diagnostic-restore-retry").start();
+        });
         button(page,"KOPIUJ RAPORT",PANEL).setOnClickListener(v -> {
             ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
             if (cb != null) cb.setPrimaryClip(
@@ -186,7 +193,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.12",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.13",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
