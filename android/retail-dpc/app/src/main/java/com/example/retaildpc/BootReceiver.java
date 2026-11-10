@@ -17,6 +17,7 @@ public final class BootReceiver extends BroadcastReceiver {
             return;
         }
         if (SingleAppOwnerRelease.released(c) && State.installed(c)) {
+            PostDemoAppRestore.resumeIfStarted(c);
             if (!DemoUiBridge.completed(c)) {
                 DpcProgress.showReady(c);
             } else {
