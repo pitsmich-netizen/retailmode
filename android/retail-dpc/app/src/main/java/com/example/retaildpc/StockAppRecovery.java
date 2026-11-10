@@ -6,16 +6,18 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
- * Restore existing, factory-preloaded apps only while Retail Setup is still DO.
- * Never sideloads an APK, fetches a store account or changes user consent.
- * Some Galaxy titles are delivered later through Galaxy/Play Store and
- * cannot be restored if no preload package is present on the device.
+ * Conservative, allowlisted system-app recovery probe for factory-reset testing.
+ * The key change in 0.11.13: try DevicePolicyManager.enableSystemApp even when
+ * PackageManager cannot find the package. The previous precheck prevented every
+ * missing Samsung app from ever reaching the API. This does NOT download APKs.
  */
 final class StockAppRecovery {
-    private static final String PREF = "retail_stock_apps_recovery_0117";
-    // Exact package names are intentionally allowlisted. Unknown apps are never touched.
+    private static final String PREF = "retail_stock_apps_recovery_01113";
     private static final String[][] APPS = {
         {"Kalendarz Samsung", "com.samsung.android.calendar"},
         {"Kalkulator Samsung", "com.sec.android.app.popupcalculator"},
@@ -33,104 +35,135 @@ final class StockAppRecovery {
     private StockAppRecovery() { }
 
     static boolean attempted(Context c) {
-        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getBoolean("attempted", false);
+        return prefs(c).getBoolean("attempted", false);
+    }
+    private static SharedPreferences prefs(Context c) {
+        return c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
     }
 
     static synchronized void restore(Context c) {
-        if (attempted(c)) return;
+        restore(c, false);
+    }
+    /**
+     * Repeat an actual restoration attempt only after the user explicitly
+     * requests it in the diagnostic panel; do not repeatedly mutate packages
+     * on every Activity or boot lifecycle callback.
+     */
+    static synchronized void restore(Context c, boolean force) {
+        if (!force && attempted(c)) return;
         DevicePolicyManager dpm = c.getSystemService(DevicePolicyManager.class);
-        if (dpm == null || !dpm.isDeviceOwnerApp(c.getPackageName())) return;
+        if (dpm == null || !dpm.isDeviceOwnerApp(c.getPackageName())) {
+            State.log(c,"StockAppProbe: odmowa; brak aktywnego Device Owner");
+            return;
+        }
         ComponentName admin = new ComponentName(c, AdminReceiver.class);
         PackageManager pm = c.getPackageManager();
-        int already = 0, restored = 0, absent = 0, failed = 0;
+        int already = 0, recovered = 0, missing = 0, failed = 0, attempted = 0;
         StringBuilder record = new StringBuilder();
-
         for (String[] entry : APPS) {
             String name = entry[0], pkg = entry[1];
             String before = state(pm, pkg);
+            String after = before;
             String result;
             if ("ZAINSTALOWANA".equals(before)) {
                 already++;
-                result = "już dostępna";
-            } else if (!isFactorySystemApp(pm,pkg)) {
-                absent++;
-                result = "aplikacja sklepowa lub pakiet nieobecny; użyj oficjalnego sklepu";
+                result = "już dostępna; bez ingerencji";
             } else {
+                attempted++;
+                String factory = factoryFlag(pm,pkg);
+                String outcome;
                 try {
-                    // Public DPM method can only restore a factory system
-                    // package; it does not download a missing third-party APK.
+                    // The public Device Owner API itself validates whether a
+                    // factory-preloaded system package can be re-enabled.
+                    // Critically: never short-circuit when PM says BRAK.
                     dpm.enableSystemApp(admin, pkg);
-                    String after = state(pm, pkg);
-                    if ("ZAINSTALOWANA".equals(after)) {
-                        restored++;
-                        result = "przywrócona";
-                    } else {
-                        absent++;
-                        result = "brak fabrycznego pakietu / nadal niewidoczna";
-                    }
+                    outcome = "enableSystemApp: wywołanie OK";
+                } catch (SecurityException ex) {
+                    outcome = "enableSystemApp: SecurityException";
+                } catch (IllegalArgumentException ex) {
+                    outcome = "enableSystemApp: IllegalArgumentException";
                 } catch (RuntimeException ex) {
-                    if ("BRAK".equals(before)) absent++;
-                    else failed++;
-                    result = "nieprzywrócona (" + ex.getClass().getSimpleName() + ")";
+                    outcome = "enableSystemApp: " + ex.getClass().getSimpleName();
                 }
+                after = state(pm, pkg);
+                if ("ZAINSTALOWANA".equals(after)) {
+                    recovered++;
+                    result = "PRZYWRÓCONA";
+                } else {
+                    missing++;
+                    if (!outcome.endsWith("wywołanie OK")) failed++;
+                    result = "NIEPRZYWRÓCONA";
+                }
+                result += " | przed=" + before + " | po=" + after
+                    + " | system=" + factory + " | " + outcome;
             }
             record.append(name).append(": ").append(result)
-                .append(" [").append(pkg).append("]").append('\n');
-            State.log(c, "StockAppRecovery: " + name + " - " + result);
+                .append(" [").append(pkg).append("]\n");
+            State.log(c,"StockAppProbe: "+name+" - "+result);
         }
-        String summary = "Już dostępne: " + already + "; przywrócone: " + restored
-            + "; nadal brak/niewidoczne: " + absent + "; błędy: " + failed;
-        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putBoolean("attempted", true)
-            .putString("summary", summary)
-            .putString("results", record.toString())
-            .commit();
-        State.log(c, "StockAppRecovery: " + summary);
+        String summary = "Dostępne wcześniej: " + already
+            + "; próby: " + attempted + "; przywrócone: " + recovered
+            + "; nadal brak/niewidoczne: " + missing
+            + "; wyjątki API: " + failed;
+        SharedPreferences p=prefs(c);
+        p.edit().putBoolean("attempted",true)
+            .putInt("attempts",p.getInt("attempts",0)+1)
+            .putLong("timestamp",System.currentTimeMillis())
+            .putString("summary",summary)
+            .putString("results",record.toString()).commit();
+        State.log(c,"StockAppProbe: "+summary);
     }
 
-    private static boolean isFactorySystemApp(PackageManager pm,String pkg){
-        try{
-            ApplicationInfo i=pm.getApplicationInfo(pkg,
-                PackageManager.MATCH_UNINSTALLED_PACKAGES);
-            return (i.flags & (ApplicationInfo.FLAG_SYSTEM |
-                ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
-        }catch(RuntimeException e){return false;}
-        catch(PackageManager.NameNotFoundException e){return false;}
-    }
-    private static String state(PackageManager pm, String pkg) {
+    private static String factoryFlag(PackageManager pm,String pkg) {
         try {
-            ApplicationInfo app = pm.getApplicationInfo(pkg,
+            ApplicationInfo app=pm.getApplicationInfo(pkg,PackageManager.MATCH_UNINSTALLED_PACKAGES);
+            return (app.flags & (ApplicationInfo.FLAG_SYSTEM |
+                ApplicationInfo.FLAG_UPDATED_SYSTEM_APP))!=0?"TAK":"NIE";
+        } catch (PackageManager.NameNotFoundException e) {
+            return "NIEUSTALONY (brak widoczności pakietu)";
+        } catch (RuntimeException e) {
+            return "BŁĄD ("+e.getClass().getSimpleName()+")";
+        }
+    }
+
+    private static String state(PackageManager pm,String pkg) {
+        try {
+            ApplicationInfo a=pm.getApplicationInfo(pkg,
                 PackageManager.MATCH_UNINSTALLED_PACKAGES);
-            if ((app.flags & ApplicationInfo.FLAG_INSTALLED) == 0)
+            if ((a.flags & ApplicationInfo.FLAG_INSTALLED)==0)
                 return "NIEZAINSTALOWANA DLA UŻYTKOWNIKA";
-            if (!app.enabled) return "WYŁĄCZONA";
+            if(!a.enabled)return "WYŁĄCZONA";
             return "ZAINSTALOWANA";
-        } catch (PackageManager.NameNotFoundException ex) {
+        } catch (PackageManager.NameNotFoundException e) {
             return "BRAK";
-        } catch (RuntimeException ex) {
-            return "NIEUSTALONY";
+        } catch (RuntimeException e) {
+            return "NIEUSTALONY ("+e.getClass().getSimpleName()+")";
         }
     }
 
     static String report(Context c) {
-        SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
-        StringBuilder out = new StringBuilder();
-        out.append("PRZYWRACANIE PRZED ZWOLNIENIEM DEVICE OWNER\n")
-            .append(p.getBoolean("attempted", false)
-                ? p.getString("summary", "Brak podsumowania")
-                : "Nie wykonano jeszcze (lub aplikacja została uruchomiona bez tej funkcji)")
-            .append("\n\nSTAN BIEŻĄCY [pakiet]:\n");
-        PackageManager pm = c.getPackageManager();
-        for (String[] entry : APPS) {
-            out.append(entry[0]).append(": ").append(state(pm, entry[1]))
-                .append(" [").append(entry[1]).append("]\n");
+        SharedPreferences p=prefs(c);
+        StringBuilder out=new StringBuilder();
+        out.append("TEST ENABLE_SYSTEM_APP (0.11.13) PRZY AKTYWNYM DEVICE OWNER\n");
+        if(p.getBoolean("attempted",false)) {
+            out.append(p.getString("summary","Brak podsumowania")).append("\n");
+            long timestamp=p.getLong("timestamp",0L);
+            if(timestamp>0)out.append("Ostatni test: ")
+                .append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.getDefault())
+                    .format(new Date(timestamp))).append("\n");
+            out.append("Numer próby: ").append(p.getInt("attempts",0)).append("\n");
+            out.append("\nWYNIKI PRÓB\n").append(p.getString("results","Brak wyników"));
+        } else {
+            out.append("Jeszcze nie wykonano próby przywrócenia\n");
         }
-        if (p.getBoolean("attempted", false))
-            out.append("\nWYNIKI PRZYWRACANIA:\n")
-                .append(p.getString("results", "Brak wyników"));
-        out.append("\nBrak pakietu oznacza, że trzeba skorzystać z oficjalnej ")
-            .append("dystrybucji (Galaxy Store / Google Play); DPC nie pobiera obcych APK.");
+        out.append("\nSTAN BIEŻĄCY\n");
+        PackageManager pm=c.getPackageManager();
+        for(String[] a:APPS)
+            out.append(a[0]).append(": ").append(state(pm,a[1]))
+                .append(" [").append(a[1]).append("]\n");
+        out.append("\nBRAK może oznaczać pakiet nieobecny albo niewidoczny dla aplikacji. ")
+            .append("enableSystemApp działa tylko na odpowiednich aplikacjach fabrycznych; ")
+            .append("wywołanie API nie pobiera APK ani nie dowodzi, że pakiet istnieje.");
         return out.toString();
     }
 }

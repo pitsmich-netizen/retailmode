@@ -1,3 +1,12 @@
+## 2026-11-10 — Retail Setup 0.11.13-ci: niezależny test przywracania pakietów
+
+- Tryb diagnostyczny QR bez pobierania Retail Mode/Experience pozostaje aktywny.
+- Wcześniej StockAppRecovery odrzucał brakujące pakiety już na etapie PackageManager; teraz dla każdego brakującego pakietu z jawnej listy wykonuje rzeczywistą próbę `DevicePolicyManager.enableSystemApp(admin, packageName)`.
+- Raport pokazuje stan przed i po, informację o fabrycznym pakiecie, dokładny typ wyjątku oraz liczby prób / przywróceń.
+- Dodano przycisk ręcznego ponowienia **samych prób przywracania**, bez resetu i bez pobierania demo.
+- Nadal nie ma pobierania APK z niezweryfikowanych źródeł. `enableSystemApp` może przywrócić wyłącznie odpowiednie aplikacje fabryczne; brak wyniku nie oznacza błędu QR.
+- Zwolnienie Device Owner pozostaje wyłącznie ręczne w diagnostyce. Potrzebny test na fizycznym S26.
+
 # CHANGELOG — retailmode
 
 ## 2026-11-09 — Retail Setup 0.11.5-ci: stabilny ekran Dostępności
