@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private boolean servicePanelUnlocked;
     private Button accessibilityRetry;
     private TextView stockAppsReport;
+    private TextView diagnosticResult;
     private final Runnable update=new Runnable(){
         @Override public void run(){
             if(isFinishing()||isDestroyed())return;
@@ -69,14 +70,23 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
-        if (DemoUiBridge.completed(this)) {
+        if (DiagnosticMode.enabled(this)) {
+            drawDiagnostic();
+        } else if (DemoUiBridge.completed(this)) {
             showServicePin();
         } else {
             draw();
         }
         State.log(this,"Retail Setup UI otwarty; wersja " + BuildConfig.VERSION_NAME
             + "; action=" + getIntent().getAction());
-        if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))Scheduler.schedule(this);
+        if(DiagnosticMode.enabled(this)) {
+            new Thread(() -> {
+                DiagnosticMode.run(getApplicationContext());
+                runOnUiThread(() -> { if (diagnosticResult != null)
+                    diagnosticResult.setText(DiagnosticMode.report(this)); });
+            }, "retail-stock-app-audit").start();
+        } else if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))
+            Scheduler.schedule(this);
         // PIN screen intentionally has no setup controls: do not refresh
         // MainActivity views before the user unlocks the service panel.
         if (start != null) refresh();
@@ -121,12 +131,62 @@ public class MainActivity extends Activity {
         p.addView(e,new LinearLayout.LayoutParams(-1,dp(52)));
         return e;
     }
+    private void drawDiagnostic() {
+        ScrollView scroll=new ScrollView(this);
+        scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
+        LinearLayout page=column();
+        page.setPadding(dp(23),dp(34),dp(23),dp(36));
+        scroll.addView(page);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.12",14,BLUE,true);
+        gap(page,13);
+        text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
+        gap(page,8);
+        text(page,"Ten tryb nie pobiera Retail Mode ani zawartości Experience. " +
+            "Próba przywrócenia fabrycznych pakietów działa tylko podczas " +
+            "aktywnego Device Owner. Zakończ test, gdy zapiszesz raport.",
+            14,MUTED,false);
+        gap(page,18);
+        button(page,"PONÓW AUDYT BRAKUJĄCYCH APLIKACJI",BLUE)
+            .setOnClickListener(v -> {
+                diagnosticResult.setText("Sprawdzam aplikacje…");
+                new Thread(() -> {
+                    DiagnosticMode.run(getApplicationContext());
+                    runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
+                },"diagnostic-repeat").start();
+            });
+        button(page,"KOPIUJ RAPORT",PANEL).setOnClickListener(v -> {
+            ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cb != null) cb.setPrimaryClip(
+                ClipData.newPlainText("Retail diagnostics",DiagnosticMode.report(this)));
+        });
+        button(page,"ZAKOŃCZ TEST I ZWOLNIJ DEVICE OWNER",PANEL).setOnClickListener(v ->
+            new AlertDialog.Builder(this).setTitle("Zakończyć test?")
+                .setMessage("Zwolnienie Device Owner jest nieodwracalne bez nowej " +
+                    "konfiguracji QR. Nie zostanie pobrane demo.")
+                .setNegativeButton("Anuluj",null)
+                .setPositiveButton("Zakończ",(d,w) ->
+                    new Thread(() -> {
+                        boolean ok=SingleAppOwnerRelease.release(getApplicationContext(),true);
+                        runOnUiThread(() -> {
+                            diagnosticResult.setText((ok
+                                ? "Zwolniono Device Owner.\\n\\n"
+                                : "Nie udało się zwolnić Device Owner.\\n\\n")
+                                + DiagnosticMode.report(this));
+                            if (ok) RetailHomePolicy.exitToAndroidHome(this);
+                        });
+                    }, "diagnostic-owner-release").start()).show());
+        gap(page,20);
+        diagnosticResult=text(page,"Odczytuję stan telefonu…",12,MUTED,false);
+        diagnosticResult.setTextIsSelectable(true);
+        setContentView(scroll);
+    }
+
     private void draw(){
         ScrollView scroll=new ScrollView(this);
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.11",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.12",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
