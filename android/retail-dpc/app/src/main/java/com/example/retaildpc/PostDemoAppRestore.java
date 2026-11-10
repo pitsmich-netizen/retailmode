@@ -54,7 +54,7 @@ public final class PostDemoAppRestore {
         SharedPreferences.Editor e=p(c).edit();
         for (ApprovedApkCatalog.Source s:ApprovedApkCatalog.entries()) {
             e.remove("failed_"+s.packageName);
-            e.remove("waiting_"+s.packageName);
+            // Do not reset an active PackageInstaller session on manual retry.
         }
         e.apply();
         audit(c);
