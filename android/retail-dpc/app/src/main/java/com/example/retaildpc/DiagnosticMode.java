@@ -38,6 +38,17 @@ final class DiagnosticMode {
         prefs.edit().putBoolean("run", true).apply();
         State.log(c, "Diagnostyka: raport aplikacji gotowy (bez pobierania demo)");
     }
+    // Manual diagnostic retry; never used by full Retail Mode automation.
+    static synchronized void retryRestore(Context c) {
+        if (!enabled(c)) return;
+        if (!SingleAppOwnerRelease.isOwner(c)) {
+            State.log(c, "Diagnostyka: nie ponowiono; brak Device Owner");
+            return;
+        }
+        StockAppRecovery.restore(c, true);
+        PostDemoAppRestore.audit(c);
+        State.log(c, "Diagnostyka: ręcznie ponowiono próby przywracania");
+    }
     static String report(Context c) {
         return "TRYB DIAGNOSTYCZNY: bez Retail Mode i bez pobierania Experience\n"
             + "Device Owner: " + SingleAppOwnerRelease.isOwner(c) + "\n\n"
