@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
         super.onCreate(b);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
         if (DiagnosticMode.enabled(this)) {
+            MinimalOwnerProbe.capture(this,"MAIN_ACTIVITY_CREATED");
             drawDiagnostic();
         } else if (DemoUiBridge.completed(this)) {
             showServicePin();
@@ -137,15 +138,17 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.15",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.16",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
-        text(page,DiagnosticMode.probeOnly(this)
-                ? "Tryb OMC: sprawdzam stan Recommended apps. Osobny przycisk pozwoli " +
-                  "przetestować włączenie samego OMC. Nie pobieramy demo ani " +
-                  "brakujących aplikacji; nie ponawiamy prób enableSystemApp dla nich."
-                : "Tryb przywracania aplikacji fabrycznych; bez pobierania demo.",
+        text(page,MinimalOwnerProbe.enabled(this)
+                ? "Porównanie z czystym Device Owner: bez Retail Mode, polityki HOME, " +
+                  "zmian lokalizacji, przywracania pakietów i pobierania demo. " +
+                  "Na dole znajduje się oś zdarzeń z informacją, kiedy OMC został wyłączony."
+                : (DiagnosticMode.probeOnly(this)
+                    ? "Tryb OMC: diagnostyka i ręczny test włączenia OMC, bez demo."
+                    : "Tryb przywracania aplikacji fabrycznych; bez pobierania demo."),
             14,MUTED,false);
         gap(page,18);
         button(page,"PONÓW AUDYT BRAKUJĄCYCH APLIKACJI",BLUE)
@@ -165,7 +168,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
             }, "diagnostic-restore-retry").start();
         });
-        if (DiagnosticMode.probeOnly(this)) {
+        if (DiagnosticMode.probeOnly(this) && !MinimalOwnerProbe.enabled(this)) {
             button(page,"TEST: WŁĄCZ SAMSUNG RECOMMENDED APPS",BLUE)
                 .setOnClickListener(v -> new AlertDialog.Builder(this)
                     .setTitle("Test włączenia Samsung Recommended apps")
@@ -215,7 +218,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.15",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.16",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
