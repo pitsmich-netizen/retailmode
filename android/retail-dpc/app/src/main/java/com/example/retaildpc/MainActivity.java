@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.10",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.11",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -185,12 +185,17 @@ public class MainActivity extends Activity {
         });
         button(extra,"Ponów samą rejestrację Retail Mode",PANEL)
             .setOnClickListener(v->retryRegistrationPressed());
+        button(extra,"Ponów audyt i zatwierdzone APK po demo",PANEL).setOnClickListener(v->{
+            PostDemoAppRestore.retry(this);
+            stockAppsReport.setVisibility(View.VISIBLE);
+            stockAppsReport.setText(PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this));
+        });
         button(extra,"Brakujące aplikacje • oficjalne sklepy",PANEL)
             .setOnClickListener(v->MissingAppsCatalog.open(this));
         button(extra,"Pokaż raport aplikacji fabrycznych",PANEL).setOnClickListener(v->{
             boolean visible=stockAppsReport.getVisibility()==View.VISIBLE;
             stockAppsReport.setVisibility(visible?View.GONE:View.VISIBLE);
-            if(!visible)stockAppsReport.setText(StockAppRecovery.report(this));
+            if(!visible)stockAppsReport.setText(PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this));
         });
         stockAppsReport=text(extra,"",12,MUTED,false);
         stockAppsReport.setTextIsSelectable(true);
@@ -206,7 +211,7 @@ public class MainActivity extends Activity {
             if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("Retail Setup",
                 DpcProgress.lastSetupDiagnostic(this)+"\n"+
                 State.logs(this)+"\n"+DemoUiBridge.logs(this)
-                    +"\n\n"+StockAppRecovery.report(this)));
+                    +"\n\n"+PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this)));
         });
         button(extra,"Wyjdź na pulpit Androida",PANEL).setOnClickListener(v -> {
             // Safe at any stage: restore One UI and keep downloading in the background.
@@ -412,7 +417,7 @@ public class MainActivity extends Activity {
                 "\n\n"+DpcProgress.lastSetupDiagnostic(this)+
                 "\n\nInstalator:\n"+State.logs(this)+
                 "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this)
-                +"\n\nAplikacje fabryczne:\n"+StockAppRecovery.report(this));
+                +"\n\nPo demo:\n"+PostDemoAppRestore.report(this)+"\n\nAplikacje fabryczne:\n"+StockAppRecovery.report(this));
     }
     @Override protected void onResume(){
         super.onResume();
