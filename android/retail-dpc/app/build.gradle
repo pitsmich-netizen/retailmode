@@ -32,8 +32,8 @@ android {
         applicationId 'com.example.retaildpc'
         minSdk 31
         targetSdk 35
-        versionCode 51
-        versionName '0.11.13-ci-stockapp-direct-probe'
+        versionCode 52
+        versionName '0.11.14-ci-omc-diagnostics'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
