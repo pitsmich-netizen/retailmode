@@ -1,3 +1,11 @@
+## 2026-11-10 — Retail Setup 0.11.15: aktywacja OMC jako osobny test
+
+- OMC (Samsung Recommended apps) na S26 po provisioningu QR: aplikacja systemowa, zainstalowana dla user, ale enabled=false; Galaxy Store i SetupWizard enabled=true.
+- Dedykowany przycisk testowy z jawnym potwierdzeniem. Tylko dla `omc_probe_only` na testowym Device Owner: próba `DevicePolicyManager.enableSystemApp(admin, com.samsung.android.app.omcagent)`, a gdy nadal disabled, publiczne `PackageManager.setApplicationEnabledSetting` (system może odmówić `SecurityException`).
+- Raport obejmuje enabledSetting (odróżnienie explicit DISABLED / USER / DEFAULT), przed/po, wyjątki i liczbę testów. Dodatkowo pobieramy info o receivers i disabled components z PackageManager.
+- Brak wywoływania nieudokumentowanych aktywności, force-stop, usuwania kont, ukrytych API, instalacji APK, pobierania Retail/Experience i zwolnienia Device Owner.
+- Samo włączenie OMC nie gwarantuje pobrania aplikacji; potrzebny test Galaxy S26.
+
 ## 2026-11-10 — Retail Setup 0.11.14: Samsung Recommended apps / OMC diagnostics
 
 - Added opt-in QR flag `omc_probe_only=true`: diagnostics without Retail Mode, Experience, any APK download, or retries of `enableSystemApp` (known unsuccessful on test S26).

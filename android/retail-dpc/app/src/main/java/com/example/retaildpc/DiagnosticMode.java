@@ -61,6 +61,7 @@ final class DiagnosticMode {
             + (probeOnly(c)
                 ? "Tryb OMC: pomijam próby przywracania pakietów (ustalone jako nieskuteczne).\n"
                 : StockAppRecovery.report(c))
+            + "\n\n" + SamsungOmcEnableProbe.report(c)
             + "\n\n" + SamsungProvisioningProbe.report(c)
             + "\n\nAUDYT BRAKUJĄCYCH PAKIETÓW\n"
             + PostDemoAppRestore.report(c);

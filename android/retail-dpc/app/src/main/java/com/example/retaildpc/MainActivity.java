@@ -137,14 +137,14 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.14",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.15",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
         text(page,DiagnosticMode.probeOnly(this)
-                ? "Tryb OMC: sprawdzam obecność Samsung Recommended apps, Galaxy Store " +
-                  "i kreatorów systemowych. Bez pobierania demo i bez ponawiania " +
-                  "nieudanych prób enableSystemApp."
+                ? "Tryb OMC: sprawdzam stan Recommended apps. Osobny przycisk pozwoli " +
+                  "przetestować włączenie samego OMC. Nie pobieramy demo ani " +
+                  "brakujących aplikacji; nie ponawiamy prób enableSystemApp dla nich."
                 : "Tryb przywracania aplikacji fabrycznych; bez pobierania demo.",
             14,MUTED,false);
         gap(page,18);
@@ -165,6 +165,24 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
             }, "diagnostic-restore-retry").start();
         });
+        if (DiagnosticMode.probeOnly(this)) {
+            button(page,"TEST: WŁĄCZ SAMSUNG RECOMMENDED APPS",BLUE)
+                .setOnClickListener(v -> new AlertDialog.Builder(this)
+                    .setTitle("Test włączenia Samsung Recommended apps")
+                    .setMessage("Test dotyczy tylko fabrycznej aplikacji OMC. " +
+                        "Spróbuje użyć udokumentowanych metod Androida do jej włączenia. " +
+                        "Nie pobiera demo i nie uruchamia ukrytych usług Samsunga. " +
+                        "Jeżeli system odmówi, wynik pojawi się w raporcie.")
+                    .setNegativeButton("Anuluj",null)
+                    .setPositiveButton("Uruchom test",(dialog,which) -> {
+                        diagnosticResult.setText("Testuję włączenie OMC…");
+                        new Thread(() -> {
+                            SamsungOmcEnableProbe.attempt(getApplicationContext());
+                            runOnUiThread(() -> diagnosticResult.setText(
+                                DiagnosticMode.report(this)));
+                        },"samsung-omc-enable-test").start();
+                    }).show());
+        }
         button(page,"KOPIUJ RAPORT",PANEL).setOnClickListener(v -> {
             ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
             if (cb != null) cb.setPrimaryClip(
@@ -197,7 +215,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.14",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.15",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :

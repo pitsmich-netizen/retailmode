@@ -23,7 +23,7 @@ final class SamsungProvisioningProbe {
 
     static String report(Context c) {
         PackageManager pm=c.getPackageManager();
-        StringBuilder b=new StringBuilder("SAMSUNG: PIERWSZA KONFIGURACJA / OMC — 0.11.14\n");
+        StringBuilder b=new StringBuilder("SAMSUNG: PIERWSZA KONFIGURACJA / OMC — 0.11.15\n");
         b.append("Odczyt diagnostyczny: bez uruchamiania usług OEM i bez APK\n");
         try {
             b.append("device_provisioned=")
@@ -46,7 +46,9 @@ final class SamsungProvisioningProbe {
                 PackageInfo info=pm.getPackageInfo(pkg,
                     PackageManager.MATCH_UNINSTALLED_PACKAGES |
                     PackageManager.GET_ACTIVITIES |
-                    PackageManager.GET_SERVICES);
+                    PackageManager.GET_SERVICES |
+                    PackageManager.GET_RECEIVERS |
+                    PackageManager.MATCH_DISABLED_COMPONENTS);
                 ApplicationInfo app=info.applicationInfo;
                 b.append("  WIDOCZNY: TAK; wersja=")
                     .append(info.versionName==null?"?":info.versionName)
@@ -59,6 +61,14 @@ final class SamsungProvisioningProbe {
                         .append((app.flags&(ApplicationInfo.FLAG_SYSTEM |
                             ApplicationInfo.FLAG_UPDATED_SYSTEM_APP))!=0)
                         .append("\n");
+                    b.append("  enabledSetting (0=DEFAULT,1=ENABLED,2=DISABLED,")
+                        .append("3=DISABLED_USER,4=UNTIL_USED): ");
+                    try {
+                        b.append(pm.getApplicationEnabledSetting(pkg)).append("\n");
+                    } catch(RuntimeException e) {
+                        b.append("NIEDOSTĘPNY: ")
+                            .append(e.getClass().getSimpleName()).append("\n");
+                    }
                 }
                 int exported=0,enabled=0;
                 if(info.activities!=null) {
@@ -72,7 +82,10 @@ final class SamsungProvisioningProbe {
                     .append("; exported=").append(exported)
                     .append("; exportedEnabled=").append(enabled)
                     .append("; services=")
-                    .append(info.services==null?0:info.services.length).append("\n");
+                    .append(info.services==null?0:info.services.length)
+                    .append("; receivers=")
+                    .append(info.receivers==null?0:info.receivers.length)
+                    .append("\n");
                 b.append("  launcher publiczny: ")
                     .append(pm.getLaunchIntentForPackage(pkg)!=null).append("\n");
             } catch(PackageManager.NameNotFoundException e) {
