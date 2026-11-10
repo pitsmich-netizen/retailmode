@@ -1,3 +1,11 @@
+## 2026-11-10 — Retail Setup 0.11.14: Samsung Recommended apps / OMC diagnostics
+
+- Added opt-in QR flag `omc_probe_only=true`: diagnostics without Retail Mode, Experience, any APK download, or retries of `enableSystemApp` (known unsuccessful on test S26).
+- Read-only report: Samsung Recommended apps (`com.samsung.android.app.omcagent`), Galaxy Store, Samsung/Google Setup Wizard, per-user install/enabled/system state, component counts, version, and setup-complete flags.
+- Existing full Retail Mode QR behavior unchanged. Existing restore diagnostic QR remains supported when `omc_probe_only` is absent.
+- Source of OMC package mapping is community device package inventory, not a documented OEM installation API. Code intentionally avoids unsupported intents or automatic activation.
+- Validation still required on physical Galaxy S26 configured via QR to compare with normal consumer provisioning.
+
 ## 2026-11-10 — Retail Setup 0.11.13-ci: niezależny test przywracania pakietów
 
 - Tryb diagnostyczny QR bez pobierania Retail Mode/Experience pozostaje aktywny.
