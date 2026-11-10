@@ -169,8 +169,8 @@ public class MainActivity extends Activity {
                         boolean ok=SingleAppOwnerRelease.release(getApplicationContext(),true);
                         runOnUiThread(() -> {
                             diagnosticResult.setText((ok
-                                ? "Zwolniono Device Owner.\\n\\n"
-                                : "Nie udało się zwolnić Device Owner.\\n\\n")
+                                ? "Zwolniono Device Owner.\n\n"
+                                : "Nie udało się zwolnić Device Owner.\n\n")
                                 + DiagnosticMode.report(this));
                             if (ok) RetailHomePolicy.exitToAndroidHome(this);
                         });
