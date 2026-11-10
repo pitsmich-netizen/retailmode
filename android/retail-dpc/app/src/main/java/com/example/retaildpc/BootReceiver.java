@@ -9,6 +9,10 @@ import com.example.retaildpc.demo.DemoUiBridge;
 /** Preparation retry while owner, or a minimal pending-START notification after owner release. */
 public final class BootReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context c, Intent i) {
+        if (DiagnosticMode.enabled(c)) {
+            if (SingleAppOwnerRelease.isOwner(c)) DiagnosticMode.run(c);
+            return;
+        }
         if (SingleAppOwnerRelease.isOwner(c)) {
             if (!SingleAppOwnerRelease.blocked(c)) {
                 RetailHomePolicy.ensure(c);
