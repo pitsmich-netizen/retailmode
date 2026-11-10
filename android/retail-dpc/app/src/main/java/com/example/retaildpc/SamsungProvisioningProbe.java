@@ -23,7 +23,7 @@ final class SamsungProvisioningProbe {
 
     static String report(Context c) {
         PackageManager pm=c.getPackageManager();
-        StringBuilder b=new StringBuilder("SAMSUNG: PIERWSZA KONFIGURACJA / OMC — 0.11.15\n");
+        StringBuilder b=new StringBuilder("SAMSUNG: PIERWSZA KONFIGURACJA / OMC — 0.11.17\n");
         b.append("Odczyt diagnostyczny: bez uruchamiania usług OEM i bez APK\n");
         try {
             b.append("device_provisioned=")

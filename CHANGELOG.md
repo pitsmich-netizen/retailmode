@@ -1,3 +1,11 @@
+## 2026-11-10 — Retail Setup 0.11.17: normalny Setup Wizard — porównanie bez QR
+
+- Wersja 0.11.16 na S26 potwierdziła: OMC było ENABLED w GET_PROVISIONING_MODE i ADMIN_POLICY_COMPLIANCE, ale DISABLED po user_setup_complete. Zwolnienie Device Owner nie odwróciło tego stanu.
+- Dodano **osobną** uruchamialną ikonę `Test aplikacji Samsung` (ConsumerBaselineActivity) do testów po standardowej, niezarządzanej konfiguracji bez QR.
+- Po ręcznym zainstalowaniu APK z GitHuba tester widzi stan OMC, Setup Wizard, Galaxy Store oraz audyt 12 pakietów — bez żadnych operacji Device Owner, bez rejestracji retail, bez pobierania demo lub aktualizacji.
+- Celem jest sprawdzenie, czy OMC po zakończeniu **zwykłej** konfiguracji też staje się DISABLED; sam OMC nie jest zweryfikowanym interfejsem do ponownego uruchamiania kolejki aplikacji.
+- Dodatkowa ikona testowa jest tymczasowa i zostanie usunięta z wersji produkcyjnej. Dotychczasowe tryby QR nie zmieniają działania.
+
 ## 2026-11-10 — Retail Setup 0.11.16: minimalny Device Owner / test A-B OMC
 
 - Przy zwykłej konfiguracji bez QR Samsung przygotowuje kolejkę Recommended apps, a Samsung Find pobiera się bez logowania; przy konfiguracji pełnego Android Enterprise brakuje 9 aplikacji.

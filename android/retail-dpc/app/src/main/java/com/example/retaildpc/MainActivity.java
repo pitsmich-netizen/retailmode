@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.16",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.17",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.16",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.17",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
