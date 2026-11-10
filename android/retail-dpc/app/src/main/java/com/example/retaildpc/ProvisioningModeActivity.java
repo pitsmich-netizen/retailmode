@@ -31,6 +31,8 @@ public final class ProvisioningModeActivity extends Activity {
             // Capture before Android Enterprise finishes provisioning.
             MinimalOwnerProbe.accept(this,incoming);
             DiagnosticMode.accept(this,incoming);
+            if(!DiagnosticMode.enabled(this) && !MinimalOwnerProbe.enabled(this))
+                GooglePlayVersionAudit.baseline(this);
             MinimalOwnerProbe.capture(this,"GET_PROVISIONING_MODE");
             if (!MinimalOwnerProbe.enabled(this)) {
                 StoreSelection.accept(this, incoming);
