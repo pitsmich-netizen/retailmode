@@ -68,6 +68,7 @@ final class SingleAppOwnerRelease {
             // Keep BootReceiver until demo completes: on reboot it can restore
             // the pending START notification; it no longer requests owner policies.
             DpcProgress.clear(c);
+            if(!emergency) GooglePlayVersionAudit.checkpoint(c,"release_owner");
             DpcProgress.showReady(c);
             State.log(c,"DPC bez Device Owner, pakiet nadal zainstalowany");
             return true;
