@@ -17,7 +17,7 @@ import java.util.Locale;
  * No Play Store intents, no account operations, APKs, downloads or updates.
  * IMPORTANT: a version change does not identify which installer did the update.
  */
-final class GooglePlayVersionAudit {
+public final class GooglePlayVersionAudit {
     private static final String PREF = "retail_google_play_version_audit_01118";
     static final int JOB_AFTER_15_MIN = 20820, JOB_AFTER_60_MIN = 20821;
     static final String PHASE_15 = "po_15_min", PHASE_60 = "po_60_min";
@@ -93,7 +93,7 @@ final class GooglePlayVersionAudit {
     }
 
     /** Triggered only after Retail Mode positively acknowledges demo download. */
-    static synchronized void demoStarted(Context c) {
+    public static synchronized void demoStarted(Context c) {
         checkpoint(c,"demo_start");
         SharedPreferences p=prefs(c);
         if(p.getBoolean("jobs_scheduled",false))return;
