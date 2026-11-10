@@ -76,12 +76,15 @@ public final class PostDemoAppsJobService extends JobService {
                 if(Build.VERSION.SDK_INT>=31)
                     sp.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
                 int sessionId=installer.createSession(sp);
-                try(PackageInstaller.Session session=installer.openSession(sessionId);
-                    FileInputStream in=new FileInputStream(apk);
-                    java.io.OutputStream out=session.openWrite("base.apk",0,apk.length())) {
-                    byte[] bytes=new byte[65536];int n;
-                    while((n=in.read(bytes))!=-1)out.write(bytes,0,n);
-                    session.fsync(out);
+                try(PackageInstaller.Session session=installer.openSession(sessionId)) {
+                    // PackageInstaller requires all APK write streams to be
+                    // CLOSED before commit(), otherwise the commit can fail.
+                    try(FileInputStream in=new FileInputStream(apk);
+                        java.io.OutputStream out=session.openWrite("base.apk",0,apk.length())) {
+                        byte[] bytes=new byte[65536];int n;
+                        while((n=in.read(bytes))!=-1)out.write(bytes,0,n);
+                        session.fsync(out);
+                    }
                     Intent done=new Intent(this,PostDemoInstallReceiver.class)
                         .setAction(getPackageName()+".POST_DEMO_RESULT")
                         .putExtra("pkg",pkg);
