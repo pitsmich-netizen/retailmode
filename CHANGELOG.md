@@ -1,3 +1,13 @@
+## 2026-11-10 — Retail Setup 0.11.16: minimalny Device Owner / test A-B OMC
+
+- Przy zwykłej konfiguracji bez QR Samsung przygotowuje kolejkę Recommended apps, a Samsung Find pobiera się bez logowania; przy konfiguracji pełnego Android Enterprise brakuje 9 aplikacji.
+- QR `minimal_owner_probe=true` (plus `diagnostics_no_demo=true`) aktywuje wariant testowy: minimalny Device Owner. Nie ustawia HOME, lokalizacji, powiadomień, nie pobiera Retail Mode/Experience i nie dotyka fabrycznych aplikacji.
+- Raport czasu rzeczywistego rejestruje stan OMC (installed/enabled/enabledSetting), DO i flagi Setup Wizard w fazach GET_PROVISIONING_MODE, DEVICE_ADMIN_ENABLED, PROFILE_PROVISIONING_COMPLETE, ADMIN_POLICY_COMPLIANCE i MAIN_ACTIVITY_CREATED.
+- Włącza tylko własną ikonę Retail Setup, aby raport był dostępny bez nadpisywania launchera.
+- Pozostałe tryby i działająca automatyzacja pełnego Retail Mode pozostają bez zmian.
+- Znacznik LEAVE_ALL_SYSTEM_APPS_ENABLED=true był już obecny w dotychczasowym QR; nie odpowiada za pobieranie aplikacji sklepowych.
+- Wynik testu służy ustaleniu, czy wyłączenie OMC jest cechą Android Enterprise na S26, czy efektem aktywnych polityk DPC.
+
 ## 2026-11-10 — Retail Setup 0.11.15: aktywacja OMC jako osobny test
 
 - OMC (Samsung Recommended apps) na S26 po provisioningu QR: aplikacja systemowa, zainstalowana dla user, ale enabled=false; Galaxy Store i SetupWizard enabled=true.
