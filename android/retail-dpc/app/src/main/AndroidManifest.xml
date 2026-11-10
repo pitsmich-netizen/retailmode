@@ -11,6 +11,10 @@
         <package android:name="com.android.settings"/>
         <!-- Visibility of exact stock packages for post-provisioning audit.
              No QUERY_ALL_PACKAGES; no unknown packages are modified. -->
+        <package android:name="com.samsung.android.app.omcagent"/>
+        <package android:name="com.sec.android.app.samsungapps"/>
+        <package android:name="com.sec.android.app.SecSetupWizard"/>
+        <package android:name="com.google.android.setupwizard"/>
         <package android:name="com.samsung.android.calendar"/>
         <package android:name="com.sec.android.app.popupcalculator"/>
         <package android:name="com.sec.android.app.clockpackage"/>
