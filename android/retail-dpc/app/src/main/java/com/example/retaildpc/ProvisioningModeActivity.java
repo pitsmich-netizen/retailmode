@@ -28,8 +28,14 @@ public final class ProvisioningModeActivity extends Activity {
             DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,
             PersistableBundle.class);
         if (incoming != null) {
-            StoreSelection.accept(this, incoming);
-            QrRetailCredential.accept(this, incoming);
+            // Capture before Android Enterprise finishes provisioning.
+            MinimalOwnerProbe.accept(this,incoming);
+            DiagnosticMode.accept(this,incoming);
+            MinimalOwnerProbe.capture(this,"GET_PROVISIONING_MODE");
+            if (!MinimalOwnerProbe.enabled(this)) {
+                StoreSelection.accept(this, incoming);
+                QrRetailCredential.accept(this, incoming);
+            }
             response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE, incoming);
         }
         State.log(this, "GET_PROVISIONING_MODE / Fully managed");
