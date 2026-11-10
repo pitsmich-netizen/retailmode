@@ -1,0 +1,64 @@
+name: Build Safe Samsung Baseline Diagnostic APK
+
+on:
+  pull_request:
+    paths:
+      - 'android/retail-dpc/baseline/**'
+      - 'android/retail-dpc/settings.gradle'
+      - '.github/workflows/samsung-baseline-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'android/retail-dpc/baseline/**'
+      - 'android/retail-dpc/settings.gradle'
+      - '.github/workflows/samsung-baseline-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          MANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$MANAGER" ]; then MANAGER="$SDK/cmdline-tools/16.0/bin/sdkmanager"; fi
+          "$MANAGER" --install 'platforms;android-36' 'build-tools;35.0.0'
+          echo "$SDK/build-tools/35.0.0" >> "$GITHUB_PATH"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Assemble small baseline APK
+        run: gradle --no-daemon -p android/retail-dpc :baseline:assembleDebug
+      - name: Verify security-critical manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/retail-dpc/baseline/build/outputs/apk/debug/baseline-debug.apk"
+          test -f "$APK"
+          apksigner verify "$APK"
+          aapt dump badging "$APK" | grep -F 'com.pitsmich.samsungbaseline'
+          aapt dump xmltree "$APK" AndroidManifest.xml > /tmp/baseline-manifest.txt
+          if grep -E 'BIND_DEVICE_ADMIN|BIND_ACCESSIBILITY_SERVICE|REQUEST_INSTALL_PACKAGES|QUERY_ALL_PACKAGES|INTERNET|DeviceAdminReceiver|AccessibilityService' /tmp/baseline-manifest.txt; then
+            echo "ERROR: Unexpected high-risk permission/component in standalone baseline"
+            exit 1
+          fi
+          mkdir -p output
+          cp "$APK" output/TestAplikacjiSamsung.apk
+          sha256sum output/TestAplikacjiSamsung.apk > output/SHA256SUMS.txt
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: samsung-baseline-apk
+          path: output/
+          retention-days: 30

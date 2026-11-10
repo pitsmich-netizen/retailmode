@@ -10,4 +10,4 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = 'RetailDpcTest'
-include ':app'
+include ':app', ':baseline'
