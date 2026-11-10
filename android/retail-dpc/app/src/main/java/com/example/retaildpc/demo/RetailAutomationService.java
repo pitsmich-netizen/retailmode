@@ -1,6 +1,7 @@
 package com.example.retaildpc.demo;
 
 import android.accessibilityservice.AccessibilityService;
+import com.example.retaildpc.PostDemoAppRestore;
 import android.accessibilityservice.InputMethod;
 import android.os.Build;
 import android.view.KeyEvent;
@@ -282,6 +283,7 @@ public final class RetailAutomationService extends AccessibilityService {
             ? "Retail Mode potwierdza pobieranie demo; nie ponawiam rejestracji."
             : "Retail Mode potwierdza wcześniejszą rejestrację; pomijam formularz.");
         CompletionHider.markAlreadyConfigured(this,downloading);
+        PostDemoAppRestore.onDemoDownloadStart(this);
         try{disableSelf();}
         finally{CompletionHider.hideLauncherIfComplete(this);}
     }
@@ -293,6 +295,7 @@ public final class RetailAutomationService extends AccessibilityService {
         AutomationState.stop(this,
             "Po CONFIRM Retail Mode wyświetlił komunikat o rozpoczęciu pobierania. Wyłączam Dostępność.");
         CompletionHider.markDownloadAcknowledged(this);
+        PostDemoAppRestore.onDemoDownloadStart(this);
         StatusToast.completion(this);
         // Disable Accessibility before hiding the launcher alias. Hide only the icon,
         // not MainActivity or the application; never ask to uninstall Helper.
