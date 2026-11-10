@@ -1,0 +1,39 @@
+name: Verify Retail Setup pull request
+
+on:
+  pull_request:
+    paths:
+      - 'android/retail-dpc/**'
+      - '.github/workflows/retail-pr-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK 36
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          MANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$MANAGER" ]; then MANAGER="$SDK/cmdline-tools/16.0/bin/sdkmanager"; fi
+          "$MANAGER" --install 'platforms;android-36' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Compile
+        run: gradle --no-daemon -p android/retail-dpc :app:assembleDebug
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: retail-setup-test-apk
+          path: android/retail-dpc/app/build/outputs/apk/debug/app-debug.apk
