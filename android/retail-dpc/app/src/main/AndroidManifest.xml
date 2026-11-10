@@ -15,6 +15,15 @@
         <package android:name="com.sec.android.app.samsungapps"/>
         <package android:name="com.sec.android.app.SecSetupWizard"/>
         <package android:name="com.google.android.setupwizard"/>
+        <package android:name="com.android.vending"/>
+        <package android:name="com.google.android.gms"/>
+        <package android:name="com.google.android.googlequicksearchbox"/>
+        <package android:name="com.android.chrome"/>
+        <package android:name="com.google.android.youtube"/>
+        <package android:name="com.google.android.apps.maps"/>
+        <package android:name="com.google.android.gm"/>
+        <package android:name="com.google.android.apps.photos"/>
+        <package android:name="com.google.android.webview"/>
         <package android:name="com.samsung.android.calendar"/>
         <package android:name="com.sec.android.app.popupcalculator"/>
         <package android:name="com.sec.android.app.clockpackage"/>
@@ -55,6 +64,8 @@
         <service android:name=".InstallJobService" android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
         <service android:name=".PostDemoAppsJobService" android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <service android:name=".GooglePlayVersionJobService" android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
         <receiver android:name=".PostDemoInstallReceiver" android:exported="false"/>
         <activity android:name=".PostDemoApprovalActivity" android:exported="false"/>

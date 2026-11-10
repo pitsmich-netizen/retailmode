@@ -32,6 +32,7 @@ public final class AdminReceiver extends DeviceAdminReceiver {
             DiagnosticMode.run(c);
             return;
         }
+        if (!DiagnosticMode.enabled(c)) GooglePlayVersionAudit.baseline(c);
         InitialDeviceSetup.enableLocation(c);
         DpcProgress.preparePermission(c);
         RetailHomePolicy.ensure(c);

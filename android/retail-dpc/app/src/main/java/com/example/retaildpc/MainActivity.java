@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     private TextView accessibilityHint;
     private boolean servicePanelUnlocked;
     private Button accessibilityRetry;
-    private TextView stockAppsReport;
+    private TextView stockAppsReport,googlePlayVersionsReport;
     private TextView diagnosticResult;
     private final Runnable update=new Runnable(){
         @Override public void run(){
@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.17",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.18",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.17",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.18",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -277,11 +277,19 @@ public class MainActivity extends Activity {
         });
         button(extra,"Ponów samą rejestrację Retail Mode",PANEL)
             .setOnClickListener(v->retryRegistrationPressed());
-        button(extra,"Ponów audyt i zatwierdzone APK po demo",PANEL).setOnClickListener(v->{
-            PostDemoAppRestore.retry(this);
-            stockAppsReport.setVisibility(View.VISIBLE);
-            stockAppsReport.setText(PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this));
+        button(extra,"Odśwież porównanie wersji Google Play",PANEL).setOnClickListener(v->{
+            GooglePlayVersionAudit.checkpoint(this,"reczne");
+            googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this));
+            googlePlayVersionsReport.setVisibility(View.VISIBLE);
         });
+        button(extra,"Pokaż raport wersji aplikacji",PANEL).setOnClickListener(v->{
+            boolean visible=googlePlayVersionsReport.getVisibility()==View.VISIBLE;
+            googlePlayVersionsReport.setVisibility(visible?View.GONE:View.VISIBLE);
+            if(!visible)googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this));
+        });
+        googlePlayVersionsReport=text(extra,"",12,MUTED,false);
+        googlePlayVersionsReport.setTextIsSelectable(true);
+        googlePlayVersionsReport.setVisibility(View.GONE);
         button(extra,"Brakujące aplikacje • oficjalne sklepy",PANEL)
             .setOnClickListener(v->MissingAppsCatalog.open(this));
         button(extra,"Pokaż raport aplikacji fabrycznych",PANEL).setOnClickListener(v->{
@@ -303,7 +311,8 @@ public class MainActivity extends Activity {
             if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("Retail Setup",
                 DpcProgress.lastSetupDiagnostic(this)+"\n"+
                 State.logs(this)+"\n"+DemoUiBridge.logs(this)
-                    +"\n\n"+PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this)));
+                    +"\n\n"+PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this)
+                    +"\n\n"+GooglePlayVersionAudit.report(this)));
         });
         button(extra,"Wyjdź na pulpit Androida",PANEL).setOnClickListener(v -> {
             // Safe at any stage: restore One UI and keep downloading in the background.
@@ -509,7 +518,9 @@ public class MainActivity extends Activity {
                 "\n\n"+DpcProgress.lastSetupDiagnostic(this)+
                 "\n\nInstalator:\n"+State.logs(this)+
                 "\n\nAutomatyzacja:\n"+DemoUiBridge.logs(this)
-                +"\n\nPo demo:\n"+PostDemoAppRestore.report(this)+"\n\nAplikacje fabryczne:\n"+StockAppRecovery.report(this));
+                +"\n\nPo demo:\n"+PostDemoAppRestore.report(this)+"\n\nAplikacje fabryczne:\n"
+                +StockAppRecovery.report(this)+"\n\nWersje Google Play:\n"
+                +GooglePlayVersionAudit.report(this));
     }
     @Override protected void onResume(){
         super.onResume();

@@ -27,6 +27,7 @@ public final class PolicyComplianceActivity extends Activity {
             finish();
             return;
         }
+        if (!DiagnosticMode.enabled(this)) GooglePlayVersionAudit.baseline(this);
         InitialDeviceSetup.enableLocation(this);
         DpcProgress.preparePermission(this);
         RetailHomePolicy.ensure(this);
