@@ -7,7 +7,7 @@ import android.content.Context;
 final class Scheduler {
     private Scheduler() {}
     static void schedule(Context c) {
-        if(SingleAppOwnerRelease.blocked(c)||!SingleAppOwnerRelease.isOwner(c)
+        if(DiagnosticMode.enabled(c)||SingleAppOwnerRelease.blocked(c)||!SingleAppOwnerRelease.isOwner(c)
             ||State.installed(c))return;
         JobScheduler js=c.getSystemService(JobScheduler.class);
         if(js==null)return;
