@@ -39,10 +39,10 @@ final class DiagnosticMode {
         State.log(c, "Diagnostyka: raport aplikacji gotowy (bez pobierania demo)");
     }
     static String report(Context c) {
-        return "TRYB DIAGNOSTYCZNY: bez Retail Mode i bez pobierania Experience\\n"
-            + "Device Owner: " + SingleAppOwnerRelease.isOwner(c) + "\\n\\n"
+        return "TRYB DIAGNOSTYCZNY: bez Retail Mode i bez pobierania Experience\n"
+            + "Device Owner: " + SingleAppOwnerRelease.isOwner(c) + "\n\n"
             + StockAppRecovery.report(c)
-            + "\\n\\nAUDYT BRAKUJĄCYCH PAKIETÓW\\n"
+            + "\n\nAUDYT BRAKUJĄCYCH PAKIETÓW\n"
             + PostDemoAppRestore.report(c);
     }
 }
