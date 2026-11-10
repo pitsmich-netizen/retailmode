@@ -17,10 +17,13 @@ final class DiagnosticMode {
     private DiagnosticMode() { }
 
     static void accept(Context c, PersistableBundle extras) {
-        if (extras == null || !(extras.getBoolean(KEY, false) || extras.getBoolean(OMC_KEY, false))) return;
+        if (extras == null || !(extras.getBoolean(KEY,false) ||
+            extras.getBoolean(OMC_KEY,false) ||
+            extras.getBoolean("minimal_owner_probe",false))) return;
         c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
             .putBoolean("enabled", true)
-            .putBoolean("omc_probe_only", extras.getBoolean(OMC_KEY,false)).commit();
+            .putBoolean("omc_probe_only", extras.getBoolean(OMC_KEY,false) ||
+                extras.getBoolean("minimal_owner_probe",false)).commit();
         JobScheduler scheduler = c.getSystemService(JobScheduler.class);
         if (scheduler != null) scheduler.cancel(Constants.INSTALL_JOB_ID);
         State.log(c, "QR: tryb DIAGNOSTYKA APLIKACJI bez Retail Mode / Experience");
@@ -35,6 +38,7 @@ final class DiagnosticMode {
     }
     static synchronized void run(Context c) {
         if (!enabled(c)) return;
+        MinimalOwnerProbe.capture(c,"DIAGNOSTIC_RUN");
         SharedPreferences prefs = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         if (!probeOnly(c) && SingleAppOwnerRelease.isOwner(c) && !StockAppRecovery.attempted(c)) {
             State.log(c, "Diagnostyka: przywracam fabryczne pakiety jako Device Owner");
@@ -61,6 +65,7 @@ final class DiagnosticMode {
             + (probeOnly(c)
                 ? "Tryb OMC: pomijam próby przywracania pakietów (ustalone jako nieskuteczne).\n"
                 : StockAppRecovery.report(c))
+            + "\n\n" + MinimalOwnerProbe.report(c)
             + "\n\n" + SamsungOmcEnableProbe.report(c)
             + "\n\n" + SamsungProvisioningProbe.report(c)
             + "\n\nAUDYT BRAKUJĄCYCH PAKIETÓW\n"

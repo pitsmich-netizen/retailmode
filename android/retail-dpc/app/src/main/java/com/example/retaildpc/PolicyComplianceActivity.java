@@ -9,8 +9,24 @@ public final class PolicyComplianceActivity extends Activity {
         PersistableBundle x=getIntent().getParcelableExtra(
             DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,
             PersistableBundle.class);
-        if(x!=null){DiagnosticMode.accept(this,x);StoreSelection.accept(this,x);QrRetailCredential.accept(this,x);}
+        if(x!=null) {
+            MinimalOwnerProbe.accept(this,x);
+            DiagnosticMode.accept(this,x);
+            if(!MinimalOwnerProbe.enabled(this)) {
+                StoreSelection.accept(this,x);
+                QrRetailCredential.accept(this,x);
+            }
+        }
         State.log(this,"ADMIN_POLICY_COMPLIANCE");
+        MinimalOwnerProbe.capture(this,"ADMIN_POLICY_COMPLIANCE_BEFORE_POLICIES");
+        if(MinimalOwnerProbe.enabled(this)){
+            MinimalOwnerProbe.exposeOwnLauncher(this);
+            MinimalOwnerProbe.capture(this,"MINIMAL_COMPLIANCE_NO_POLICIES");
+            DiagnosticMode.run(this);
+            setResult(RESULT_OK);
+            finish();
+            return;
+        }
         InitialDeviceSetup.enableLocation(this);
         DpcProgress.preparePermission(this);
         RetailHomePolicy.ensure(this);
