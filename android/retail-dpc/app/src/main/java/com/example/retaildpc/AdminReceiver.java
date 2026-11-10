@@ -8,6 +8,8 @@ import android.os.PersistableBundle;
 public final class AdminReceiver extends DeviceAdminReceiver {
     @Override public void onEnabled(Context c, Intent i) {
         State.log(c,"Device admin enabled");
+        MinimalOwnerProbe.capture(c,"DEVICE_ADMIN_ENABLED");
+        if (MinimalOwnerProbe.enabled(c)) return;
         DpcProgress.preparePermission(c);
         RetailHomePolicy.ensure(c);
         // Do not schedule the download before QR extras are parsed.
@@ -17,7 +19,19 @@ public final class AdminReceiver extends DeviceAdminReceiver {
         PersistableBundle b=i.getParcelableExtra(
             DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,
             PersistableBundle.class);
-        if(b!=null){DiagnosticMode.accept(c,b);StoreSelection.accept(c,b);QrRetailCredential.accept(c,b);}
+        if(b!=null) {
+            MinimalOwnerProbe.accept(c,b);
+            DiagnosticMode.accept(c,b);
+            if(!MinimalOwnerProbe.enabled(c)) {
+                StoreSelection.accept(c,b);
+                QrRetailCredential.accept(c,b);
+            }
+        }
+        MinimalOwnerProbe.capture(c,"PROFILE_PROVISIONING_COMPLETE");
+        if (MinimalOwnerProbe.enabled(c)) {
+            DiagnosticMode.run(c);
+            return;
+        }
         InitialDeviceSetup.enableLocation(c);
         DpcProgress.preparePermission(c);
         RetailHomePolicy.ensure(c);
