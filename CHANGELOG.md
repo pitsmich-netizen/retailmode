@@ -1,3 +1,13 @@
+## 2026-11-10 — Retail Setup 0.11.18: pasywna kontrola wersji Google Play
+
+- Zachowujemy działającą instalację Retail Mode, wybór Experience, rejestrację i wykrywanie rozpoczęcia demo.
+- Zachowujemy `StockAppRecovery.restore()` przed zwolnieniem Device Ownera — nie usuwamy tej funkcji.
+- Jednorazowo zapisujemy wersje 13 aplikacji Google/Samsung podczas provisioningu, potem po zwolnieniu Device Ownera, po potwierdzonym starcie pobierania demo oraz automatycznie po ok. 15 i 60 minutach przez JobScheduler (bez sieci).
+- W panelu serwisowym dostępne są przyciski `Pokaż raport wersji aplikacji` i `Odśwież porównanie wersji Google Play`; raport dołącza także do `Kopiuj raport`.
+- Nie pobieramy aplikacji, nie otwieramy Play Store, nie potrzebujemy logowania ani EMM. Zmiana wersji nie rozstrzyga, skąd pochodzi aktualizacja.
+- Z panelu usuwamy przycisk ponawiania listy zatwierdzonych APK po demo; nasz katalog tych źródeł pozostaje pusty.
+- Instalacja kompletnego katalogu jak w konsumenckim Setup Wizard nadal nie jest odtwarzana.
+
 ## 2026-11-10 — Retail Setup 0.11.17: normalny Setup Wizard — porównanie bez QR
 
 - Wersja 0.11.16 na S26 potwierdziła: OMC było ENABLED w GET_PROVISIONING_MODE i ADMIN_POLICY_COMPLIANCE, ale DISABLED po user_setup_complete. Zwolnienie Device Owner nie odwróciło tego stanu.
