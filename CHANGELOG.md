@@ -1,3 +1,10 @@
+## 2026-11-14 — Retail Setup 0.11.20: usunięcie dodatkowej ikony testowej
+
+- Pełny Retail Setup nie deklaruje już `ConsumerBaselineActivity` jako osobnej aplikacji LAUNCHER — ikonka „Test aplikacji Samsung” nie powinna pojawiać się po przygotowaniu telefonu przez QR.
+- Osobna bezpieczna aplikacja do testu konsumenckiego nadal istnieje jako niezależny moduł `baseline`; ten moduł nie jest wbudowywany do pełnego Retail Setup.
+- Nie zmieniono logiki instalacji Retail Mode, konfiguracji Experience, zarządzania Device Ownerem, przywracania aplikacji systemowych ani zapisu raportów v0.11.19.
+- `LauncherActivity` pozostaje domyślnie wyłączony; `HomeActivity` jest zarządzany przez dotychczasowy mechanizm kończenia Retail Mode.
+
 ## 2026-11-14 — Retail Setup 0.11.19: kopie diagnostyki odporne na czyszczenie danych aplikacji
 
 - Bez zmian w logice pobierania Retail Mode, rejestracji demo, wyłączania Accessibility i zwalniania Device Owner.
