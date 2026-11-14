@@ -43,7 +43,6 @@ public class MainActivity extends Activity {
     private boolean servicePanelUnlocked;
     private Button accessibilityRetry;
     private TextView stockAppsReport,googlePlayVersionsReport;
-    private TextView diagnosticResult;
     private final Runnable update=new Runnable(){
         @Override public void run(){
             if(isFinishing()||isDestroyed())return;
@@ -70,23 +69,14 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
-        if (DiagnosticMode.enabled(this)) {
-            MinimalOwnerProbe.capture(this,"MAIN_ACTIVITY_CREATED");
-            drawDiagnostic();
-        } else if (DemoUiBridge.completed(this)) {
+        if (DemoUiBridge.completed(this)) {
             showServicePin();
         } else {
             draw();
         }
-        State.log(this,"Retail Setup UI otwarty; wersja " + BuildConfig.VERSION_NAME
-            + "; action=" + getIntent().getAction());
-        if(DiagnosticMode.enabled(this)) {
-            new Thread(() -> {
-                DiagnosticMode.run(getApplicationContext());
-                runOnUiThread(() -> { if (diagnosticResult != null)
-                    diagnosticResult.setText(DiagnosticMode.report(this)); });
-            }, "retail-stock-app-audit").start();
-        } else if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))
+        State.log(this,"Retail Setup UI otwarty; wersja "+BuildConfig.VERSION_NAME
+            +"; action="+getIntent().getAction());
+        if(SingleAppOwnerRelease.isOwner(this)&&!State.installed(this))
             Scheduler.schedule(this);
         // PIN screen intentionally has no setup controls: do not refresh
         // MainActivity views before the user unlocks the service panel.
@@ -132,93 +122,12 @@ public class MainActivity extends Activity {
         p.addView(e,new LinearLayout.LayoutParams(-1,dp(52)));
         return e;
     }
-    private void drawDiagnostic() {
-        ScrollView scroll=new ScrollView(this);
-        scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
-        LinearLayout page=column();
-        page.setPadding(dp(23),dp(34),dp(23),dp(36));
-        scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.19",14,BLUE,true);
-        gap(page,13);
-        text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
-        gap(page,8);
-        text(page,MinimalOwnerProbe.enabled(this)
-                ? "Porównanie z czystym Device Owner: bez Retail Mode, polityki HOME, " +
-                  "zmian lokalizacji, przywracania pakietów i pobierania demo. " +
-                  "Na dole znajduje się oś zdarzeń z informacją, kiedy OMC został wyłączony."
-                : (DiagnosticMode.probeOnly(this)
-                    ? "Tryb OMC: diagnostyka i ręczny test włączenia OMC, bez demo."
-                    : "Tryb przywracania aplikacji fabrycznych; bez pobierania demo."),
-            14,MUTED,false);
-        gap(page,18);
-        button(page,"PONÓW AUDYT BRAKUJĄCYCH APLIKACJI",BLUE)
-            .setOnClickListener(v -> {
-                diagnosticResult.setText("Sprawdzam aplikacje…");
-                new Thread(() -> {
-                    DiagnosticMode.run(getApplicationContext());
-                    runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
-                },"diagnostic-repeat").start();
-            });
-        Button retryStock = button(page,"PONÓW PRÓBY PRZYWRACANIA",BLUE);
-        retryStock.setVisibility(DiagnosticMode.probeOnly(this)?View.GONE:View.VISIBLE);
-        retryStock.setOnClickListener(v -> {
-            diagnosticResult.setText("Ponawiam próby odzyskania aplikacji…");
-            new Thread(() -> {
-                DiagnosticMode.retryRestore(getApplicationContext());
-                runOnUiThread(() -> diagnosticResult.setText(DiagnosticMode.report(this)));
-            }, "diagnostic-restore-retry").start();
-        });
-        if (DiagnosticMode.probeOnly(this) && !MinimalOwnerProbe.enabled(this)) {
-            button(page,"TEST: WŁĄCZ SAMSUNG RECOMMENDED APPS",BLUE)
-                .setOnClickListener(v -> new AlertDialog.Builder(this)
-                    .setTitle("Test włączenia Samsung Recommended apps")
-                    .setMessage("Test dotyczy tylko fabrycznej aplikacji OMC. " +
-                        "Spróbuje użyć udokumentowanych metod Androida do jej włączenia. " +
-                        "Nie pobiera demo i nie uruchamia ukrytych usług Samsunga. " +
-                        "Jeżeli system odmówi, wynik pojawi się w raporcie.")
-                    .setNegativeButton("Anuluj",null)
-                    .setPositiveButton("Uruchom test",(dialog,which) -> {
-                        diagnosticResult.setText("Testuję włączenie OMC…");
-                        new Thread(() -> {
-                            SamsungOmcEnableProbe.attempt(getApplicationContext());
-                            runOnUiThread(() -> diagnosticResult.setText(
-                                DiagnosticMode.report(this)));
-                        },"samsung-omc-enable-test").start();
-                    }).show());
-        }
-        button(page,"KOPIUJ RAPORT",PANEL).setOnClickListener(v -> {
-            ClipboardManager cb=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cb != null) cb.setPrimaryClip(
-                ClipData.newPlainText("Retail diagnostics",DiagnosticMode.report(this)));
-        });
-        button(page,"ZAKOŃCZ TEST I ZWOLNIJ DEVICE OWNER",PANEL).setOnClickListener(v ->
-            new AlertDialog.Builder(this).setTitle("Zakończyć test?")
-                .setMessage("Zwolnienie Device Owner jest nieodwracalne bez nowej " +
-                    "konfiguracji QR. Nie zostanie pobrane demo.")
-                .setNegativeButton("Anuluj",null)
-                .setPositiveButton("Zakończ",(d,w) ->
-                    new Thread(() -> {
-                        boolean ok=SingleAppOwnerRelease.release(getApplicationContext(),true);
-                        runOnUiThread(() -> {
-                            diagnosticResult.setText((ok
-                                ? "Zwolniono Device Owner.\n\n"
-                                : "Nie udało się zwolnić Device Owner.\n\n")
-                                + DiagnosticMode.report(this));
-                            if (ok) RetailHomePolicy.exitToAndroidHome(this);
-                        });
-                    }, "diagnostic-owner-release").start()).show());
-        gap(page,20);
-        diagnosticResult=text(page,"Odczytuję stan telefonu…",12,MUTED,false);
-        diagnosticResult.setTextIsSelectable(true);
-        setContentView(scroll);
-    }
-
     private void draw(){
         ScrollView scroll=new ScrollView(this);
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.19",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.21",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :

@@ -91,6 +91,23 @@ jobs:
           grep -F 'AdminReceiver' /tmp/retail-setup-manifest.txt >/dev/null
           grep -F 'RetailAutomationService' /tmp/retail-setup-manifest.txt >/dev/null
           grep -F 'PROVISIONING_SUCCESSFUL' /tmp/retail-setup-manifest.txt >/dev/null
+          # Prevent accidentally shipping a second Samsung test application icon
+          # or the old OMC/diagnostic-only provisioning classes again.
+          if grep -E 'ConsumerBaselineActivity|Test aplikacji Samsung|SamsungProvisioningProbe|SamsungOmcEnableProbe|MinimalOwnerProbe|com.pitsmich.samsungbaseline' /tmp/retail-setup-manifest.txt; then
+            echo 'ERROR: unexpected consumer-test or OMC diagnostic component in Retail Setup APK'
+            exit 1
+          fi
+          if find android/retail-dpc/app/src/main/java -type f \(             -name 'ConsumerBaselineActivity.java' -o             -name 'SamsungProvisioningProbe.java' -o             -name 'SamsungOmcEnableProbe.java' -o             -name 'MinimalOwnerProbe.java' -o             -name 'DiagnosticMode.java' \) | grep -q .; then
+            echo 'ERROR: legacy diagnostic Java sources remain in the production module'
+            exit 1
+          fi
+          if grep -q 'android:name=".ConsumerBaselineActivity"' android/retail-dpc/app/src/main/AndroidManifest.xml; then
+            echo 'ERROR: unexpected diagnostic launcher in source manifest'
+            exit 1
+          fi
+          test ! -e android/retail-dpc/baseline
+          grep -F 'android:name=".LauncherActivity"' android/retail-dpc/app/src/main/AndroidManifest.xml >/dev/null
+          grep -F 'android:exported="true" android:enabled="false"' android/retail-dpc/app/src/main/AndroidManifest.xml >/dev/null
           if grep -F 'com.example.retailhelper' /tmp/retail-setup-manifest.txt; then
             echo 'ERROR: Helper is still referenced in All-In-One manifest'
             exit 1

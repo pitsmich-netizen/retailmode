@@ -1,3 +1,13 @@
+## 2026-11-14 — Retail Setup 0.11.21: czysta wersja do testów od zera
+
+- Usunięto z głównego APK pozostałości po „Test zwykłej konfiguracji”: `ConsumerBaselineActivity`, `SamsungProvisioningProbe`, `SamsungOmcEnableProbe`, `MinimalOwnerProbe` i `DiagnosticMode`.
+- Usunięto osobny archiwalny moduł `:baseline` i jego workflow. Nie jest wymagany do działającego automatu.
+- Android Enterprise QR prowadzi wyłącznie do normalnego Retail Setup, bez historycznych ścieżek diagnostycznych lub dodatkowego launchera.
+- Zachowano pobieranie Retail Mode, Wi-Fi, konfigurację Experience, automatyczną rejestrację, sprawdzenie istniejącego demo, ponawianie rejestracji, zwolnienie Device Ownera, przywracanie aplikacji systemowych oraz bezpieczne raporty v0.11.19.
+- Podczas budowania CI odrzuca APK z powrotem klas starego testu i sprawdza, czy zwykła ikona `LauncherActivity` pozostaje domyślnie wyłączona.
+- Uwaga: historyczne starsze wydania w repozytorium pozostawiono dla identyfikowalności. Nowy QR korzysta wyłącznie z najnowszej wersji.
+- Reset S26 usuwa lokalne aplikacje/dane użytkownika, lecz nie jest potwierdzeniem skasowania historycznych plików APK z internetu.
+
 ## 2026-11-14 — Retail Setup 0.11.20: usunięcie dodatkowej ikony testowej
 
 - Pełny Retail Setup nie deklaruje już `ConsumerBaselineActivity` jako osobnej aplikacji LAUNCHER — ikonka „Test aplikacji Samsung” nie powinna pojawiać się po przygotowaniu telefonu przez QR.
