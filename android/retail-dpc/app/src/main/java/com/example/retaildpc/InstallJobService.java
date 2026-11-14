@@ -24,10 +24,6 @@ public final class InstallJobService extends JobService {
     private volatile boolean cancelled = false;
 
     @Override public boolean onStartJob(JobParameters params) {
-        if (DiagnosticMode.enabled(this)) {
-            State.log(this,"Diagnostyka: Samsung Retail Mode NIE będzie pobierany");
-            return false;
-        }
         if (SingleAppOwnerRelease.blocked(this)) { State.log(this, "Instalator zablokowany po próbie cleanup"); return false; }
         cancelled = false;
         State.log(this, "Retail: JobScheduler uruchomil InstallJobService; expedited="
@@ -36,9 +32,7 @@ public final class InstallJobService extends JobService {
             boolean retry = false;
             try {
                 DevicePolicyManager dpm = getSystemService(DevicePolicyManager.class);
-                if (DiagnosticMode.enabled(this)) {
-                    State.log(this, "Diagnostyka: pomijam instalację Retail Mode");
-                } else if (dpm == null || !dpm.isDeviceOwnerApp(getPackageName())) {
+                if (dpm == null || !dpm.isDeviceOwnerApp(getPackageName())) {
                     State.log(this, "STOP: aplikacja nie jest Device Owner");
                     retry = true;
                 } else if (State.installed(this)) {
@@ -46,11 +40,11 @@ public final class InstallJobService extends JobService {
                 } else {
                     DpcProgress.preparePermission(this);
                     if (!SetupNetworkGate.await(this, "retail",
-                            () -> cancelled || DiagnosticMode.enabled(this))) {
+                            () -> cancelled)) {
                         retry = !cancelled && !SingleAppOwnerRelease.blocked(this)
-                            && !DiagnosticMode.enabled(this);
+                            ;
                         State.log(this, "Retail: oczekuję na zakończenie konfiguracji Androida");
-                    } else if (!DiagnosticMode.enabled(this)) {
+                    } else {
                         // Samsung Setup Wizard may ignore our temporary HOME.
                         // Once both setup flags are 1, explicitly open the dark
                         // UI while this application still owns the device.
@@ -58,7 +52,7 @@ public final class InstallJobService extends JobService {
                         File file = new File(getCacheDir(), "RetailMode-test.apk");
                         downloadWithFastRetry(file);
                         if (!cancelled && !SingleAppOwnerRelease.blocked(this)
-                                && !DiagnosticMode.enabled(this)) {
+                                ) {
                             DpcProgress.stage(this, "retail_installing", "Instaluję Retail Mode…");
                             install(file);
                         }
