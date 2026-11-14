@@ -138,7 +138,7 @@ public class MainActivity extends Activity {
         LinearLayout page=column();
         page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.18",14,BLUE,true);
+        text(page,"RETAIL  /  DIAGNOSTYKA  •  0.11.19",14,BLUE,true);
         gap(page,13);
         text(page,"Sprawdzenie aplikacji bez demo",24,WHITE,true);
         gap(page,8);
@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(BG);scroll.setFillViewport(true);
         LinearLayout page=column();page.setPadding(dp(23),dp(34),dp(23),dp(36));
         scroll.addView(page);
-        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.18",14,BLUE,true);
+        TextView brand = text(page,"RETAIL  /  SETUP    •    0.11.19",14,BLUE,true);
         brand.setLetterSpacing(0.12f);
         gap(page,14);
         text(page, DemoUiBridge.completed(this) ? "Panel administracyjny" :
@@ -279,13 +279,23 @@ public class MainActivity extends Activity {
             .setOnClickListener(v->retryRegistrationPressed());
         button(extra,"Odśwież porównanie wersji Google Play",PANEL).setOnClickListener(v->{
             GooglePlayVersionAudit.checkpoint(this,"reczne");
-            googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this));
+            googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this)
+                +"\n\n"+AuditSnapshotStore.contextReport(this));
             googlePlayVersionsReport.setVisibility(View.VISIBLE);
         });
         button(extra,"Pokaż raport wersji aplikacji",PANEL).setOnClickListener(v->{
             boolean visible=googlePlayVersionsReport.getVisibility()==View.VISIBLE;
             googlePlayVersionsReport.setVisibility(visible?View.GONE:View.VISIBLE);
-            if(!visible)googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this));
+            if(!visible)googlePlayVersionsReport.setText(GooglePlayVersionAudit.report(this)
+                +"\n\n"+AuditSnapshotStore.contextReport(this));
+        });
+        button(extra,"Zapisz raport do Pobranych",PANEL).setOnClickListener(v->{
+            String result=AuditSnapshotStore.save(this,"zapis_reczny");
+            googlePlayVersionsReport.setText("Wynik zapisu: "+result+"\n\n"
+                +AuditSnapshotStore.contextReport(this)+"\n"
+                +GooglePlayVersionAudit.report(this)+"\n\nSesja i archiwum:\n"
+                +AuditSnapshotStore.contextReport(this));
+            googlePlayVersionsReport.setVisibility(View.VISIBLE);
         });
         googlePlayVersionsReport=text(extra,"",12,MUTED,false);
         googlePlayVersionsReport.setTextIsSelectable(true);
@@ -312,7 +322,8 @@ public class MainActivity extends Activity {
                 DpcProgress.lastSetupDiagnostic(this)+"\n"+
                 State.logs(this)+"\n"+DemoUiBridge.logs(this)
                     +"\n\n"+PostDemoAppRestore.report(this)+"\n\n"+StockAppRecovery.report(this)
-                    +"\n\n"+GooglePlayVersionAudit.report(this)));
+                    +"\n\n"+GooglePlayVersionAudit.report(this)
+                    +"\n\n"+AuditSnapshotStore.contextReport(this)));
         });
         button(extra,"Wyjdź na pulpit Androida",PANEL).setOnClickListener(v -> {
             // Safe at any stage: restore One UI and keep downloading in the background.
@@ -451,6 +462,9 @@ public class MainActivity extends Activity {
     }
     private void continueDemo(){
         if(!SingleAppOwnerRelease.released(this)||DemoUiBridge.completed(this))return;
+        // Before Samsung Retail Mode takes control, archive ONLY safe package
+        // status and versions; never store QR credentials in shared Downloads.
+        AuditSnapshotStore.save(this,"przed_uruchomieniem_demo");
         String secret=QrRetailCredential.read(this);
         if((secret==null||secret.isEmpty())&&password.length()>0)
             secret=password.getText().toString();
