@@ -89,15 +89,10 @@
             android:taskAffinity="com.example.retaildpc.ready"
             android:launchMode="singleTask"
             android:excludeFromRecents="false"/>
-        <!-- Standalone, read-only launcher for side-loaded test after consumer setup.
-             Does not start DPC or grant any management permissions. -->
-        <activity android:name=".ConsumerBaselineActivity"
-            android:label="Test aplikacji Samsung" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
+        <!-- ConsumerBaselineActivity is intentionally NOT exposed in the main
+             Retail Setup package. A separate no-permissions test APK remains
+             available for normal Samsung setup diagnostics. This prevents a
+             persistent second launcher icon after Retail Mode confirmation. -->
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.app.action.PROVISIONING_SUCCESSFUL"/>
