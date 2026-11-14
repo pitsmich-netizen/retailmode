@@ -3,6 +3,7 @@ package com.example.retaildpc.demo;
 import android.accessibilityservice.AccessibilityService;
 import com.example.retaildpc.PostDemoAppRestore;
 import com.example.retaildpc.GooglePlayVersionAudit;
+import com.example.retaildpc.AuditSnapshotStore;
 import android.accessibilityservice.InputMethod;
 import android.os.Build;
 import android.view.KeyEvent;
@@ -286,6 +287,7 @@ public final class RetailAutomationService extends AccessibilityService {
         CompletionHider.markAlreadyConfigured(this,downloading);
         PostDemoAppRestore.onDemoDownloadStart(this);
         GooglePlayVersionAudit.demoStarted(this);
+        AuditSnapshotStore.save(this,"demo_pobieranie_potwierdzone");
         try{disableSelf();}
         finally{CompletionHider.hideLauncherIfComplete(this);}
     }
@@ -299,6 +301,7 @@ public final class RetailAutomationService extends AccessibilityService {
         CompletionHider.markDownloadAcknowledged(this);
         PostDemoAppRestore.onDemoDownloadStart(this);
         GooglePlayVersionAudit.demoStarted(this);
+        AuditSnapshotStore.save(this,"demo_pobieranie_potwierdzone");
         StatusToast.completion(this);
         // Disable Accessibility before hiding the launcher alias. Hide only the icon,
         // not MainActivity or the application; never ask to uninstall Helper.

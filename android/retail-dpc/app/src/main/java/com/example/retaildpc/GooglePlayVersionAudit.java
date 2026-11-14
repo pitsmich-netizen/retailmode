@@ -120,13 +120,21 @@ public final class GooglePlayVersionAudit {
 
     static synchronized String report(Context c) {
         SharedPreferences p=prefs(c);
-        StringBuilder b=new StringBuilder("PORÓWNANIE WERSJI APLIKACJI — 0.11.18\n");
+        StringBuilder b=new StringBuilder("PORÓWNANIE WERSJI APLIKACJI — 0.11.19\n");
         b.append("Nie pobieramy ani nie aktualizujemy żadnych aplikacji.\n");
         b.append("Przed QR: zwykły kreator Play może mieć własną kolejkę, ")
             .append("której nie odtwarzamy w Android Enterprise.\n");
         b.append("Początek: ").append(stamp(p.getLong("baseline_at",0))).append("\n");
         if(!p.getBoolean("baseline_taken",false)){
-            return b.append("BRAK PUNKTU POCZĄTKOWEGO — nie można ocenić zmian wersji.").toString();
+            b.append("BRAK PUNKTU POCZĄTKOWEGO — nie można ocenić zmian wersji.\n");
+            b.append("BIEŻĄCY STAN PAKIETÓW (bez historii):\n");
+            for(String[] app:PACKAGES) {
+                b.append(app[0]).append(" [").append(app[1]).append("]: ")
+                    .append(sample(c,app[1])).append("\n");
+            }
+            b.append("Dane historyczne mogły zostać wyczyszczone lub aplikacja działa ")
+                .append("w innym użytkowniku Androida. Sprawdź sesję i kopię w Pobranych.\n");
+            return b.toString();
         }
         String[] phases={"release_owner","demo_start",PHASE_15,PHASE_60,"reczne"};
         String[] labels={"Po zwolnieniu Device Owner","Rozpoczęcie pobierania demo",
@@ -164,6 +172,9 @@ public final class GooglePlayVersionAudit {
                 .append("  ").append(before).append(" → ").append(after)
                 .append(before.equals(after)?"":"  [ZMIANA]").append("\n");
         }
+        b.append("\nBIEŻĄCY STAN — odczyt bezpośredni:\n");
+        for(String[] app:PACKAGES)
+            b.append(app[0]).append(": ").append(sample(c,app[1])).append("\n");
         b.append("\nUWAGA: ten pomiar wykrywa różnice wersji lub dostępności, ")
             .append("nie rozpoznaje, czy zaktualizował je Google Play, Galaxy Store czy system. ")
             .append("Brak zmiany nie dowodzi, że Play nie działa.");

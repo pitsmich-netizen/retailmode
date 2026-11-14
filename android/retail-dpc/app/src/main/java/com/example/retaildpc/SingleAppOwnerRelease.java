@@ -30,6 +30,7 @@ final class SingleAppOwnerRelease {
         if(dpm==null)return false;
         ComponentName admin=new ComponentName(c,AdminReceiver.class);
         if(released(c)){
+            if(!emergency) GooglePlayVersionAudit.checkpoint(c,"release_owner");
             if (emergency) RetailHomePolicy.disableHomeAlias(c);
             return true;
         }
@@ -40,6 +41,9 @@ final class SingleAppOwnerRelease {
                 DpcProgress.stage(c, "stock_app_restore",
                     "Przywracam dostępne aplikacje fabryczne…");
                 StockAppRecovery.restore(c);
+                // Preserve the allowed-app recovery result before any Samsung
+                // reset or a process loss during Device Owner release.
+                AuditSnapshotStore.save(c,"po_przywracaniu_aplikacji");
             } catch (RuntimeException ex) {
                 State.log(c, "Przywracanie aplikacji fabrycznych: "
                     + ex.getClass().getSimpleName());
@@ -68,7 +72,10 @@ final class SingleAppOwnerRelease {
             // Keep BootReceiver until demo completes: on reboot it can restore
             // the pending START notification; it no longer requests owner policies.
             DpcProgress.clear(c);
-            if(!emergency) GooglePlayVersionAudit.checkpoint(c,"release_owner");
+            if(!emergency) {
+                GooglePlayVersionAudit.checkpoint(c,"release_owner");
+                AuditSnapshotStore.save(c,"po_zwolnieniu_device_owner");
+            }
             DpcProgress.showReady(c);
             State.log(c,"DPC bez Device Owner, pakiet nadal zainstalowany");
             return true;
