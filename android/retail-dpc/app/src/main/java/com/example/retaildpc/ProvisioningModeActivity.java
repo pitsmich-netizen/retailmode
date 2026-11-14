@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import java.util.ArrayList;
 
+/** Full Retail provisioning (no diagnostic-only QR modes). */
 public final class ProvisioningModeActivity extends Activity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -14,7 +15,7 @@ public final class ProvisioningModeActivity extends Activity {
             DevicePolicyManager.EXTRA_PROVISIONING_ALLOWED_PROVISIONING_MODES);
         if (allowed != null && !allowed.contains(
                 DevicePolicyManager.PROVISIONING_MODE_FULLY_MANAGED_DEVICE)) {
-            State.log(this, "ERROR: Fully Managed Device nie jest dozwolony");
+            State.log(this,"ERROR: Fully Managed Device nie jest dozwolony");
             setResult(RESULT_CANCELED);
             finish();
             return;
@@ -22,26 +23,21 @@ public final class ProvisioningModeActivity extends Activity {
         Intent response = new Intent();
         response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_MODE,
             DevicePolicyManager.PROVISIONING_MODE_FULLY_MANAGED_DEVICE);
-        // Na przyszle provisioningi zachowaj fabryczne aplikacje systemowe.
-        response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED, true);
+        // Preserve preloaded system apps whenever Android/OEM allows it.
+        response.putExtra(
+            DevicePolicyManager.EXTRA_PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED,true);
         PersistableBundle incoming = getIntent().getParcelableExtra(
             DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,
             PersistableBundle.class);
-        if (incoming != null) {
-            // Capture before Android Enterprise finishes provisioning.
-            MinimalOwnerProbe.accept(this,incoming);
-            DiagnosticMode.accept(this,incoming);
-            if(!DiagnosticMode.enabled(this) && !MinimalOwnerProbe.enabled(this))
-                GooglePlayVersionAudit.baseline(this);
-            MinimalOwnerProbe.capture(this,"GET_PROVISIONING_MODE");
-            if (!MinimalOwnerProbe.enabled(this)) {
-                StoreSelection.accept(this, incoming);
-                QrRetailCredential.accept(this, incoming);
-            }
-            response.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE, incoming);
+        if(incoming!=null) {
+            GooglePlayVersionAudit.baseline(this);
+            StoreSelection.accept(this,incoming);
+            QrRetailCredential.accept(this,incoming);
+            response.putExtra(
+                DevicePolicyManager.EXTRA_PROVISIONING_ADMIN_EXTRAS_BUNDLE,incoming);
         }
-        State.log(this, "GET_PROVISIONING_MODE / Fully managed");
-        setResult(RESULT_OK, response);
+        State.log(this,"GET_PROVISIONING_MODE / Fully managed");
+        setResult(RESULT_OK,response);
         finish();
     }
 }
