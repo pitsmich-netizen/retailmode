@@ -64,7 +64,7 @@ public final class AuditSnapshotStore {
         b.append("user_setup_complete=").append(Settings.Secure.getInt(
             c.getContentResolver(),"user_setup_complete",-1)).append("\n");
         b.append("Ostatnia kopia: ").append(
-            p.getString("last_snapshot","brak w pamięci bieżącej sesji")).append("\n");
+            prefs(c).getString("last_snapshot","brak w pamięci bieżącej sesji")).append("\n");
         b.append("Uwaga: inny UserHandle oznacza innego użytkownika Androida; ")
             .append("nowe ID sesji danych oznacza nowy lokalny zapis (np. czyszczenie ")
             .append("danych, nowy użytkownik lub reinstalacja), nie wskazuje samo przyczyny.\n");
