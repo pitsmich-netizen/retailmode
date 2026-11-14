@@ -1,3 +1,14 @@
+## 2026-11-14 — Retail Setup 0.11.19: kopie diagnostyki odporne na czyszczenie danych aplikacji
+
+- Bez zmian w logice pobierania Retail Mode, rejestracji demo, wyłączania Accessibility i zwalniania Device Owner.
+- Zachowano `StockAppRecovery.restore()` przed zwolnieniem Device Ownera.
+- Pasywny raport Google Play pokazuje **bieżące** wersje 13 pakietów nawet po utracie wcześniejszego punktu pomiarowego.
+- Raport sesji zawiera `UserHandle`, `Process UID`, lokalny znacznik danych aplikacji oraz rzeczywisty stan Device Owner/Admin. Porównanie różnych zrzutów pomaga odróżnić zmianę sesji od wyczyszczenia prywatnych danych. Nie daje stuprocentowej diagnozy przyczyny.
+- Bez automatycznej transmisji: w trakcie przygotowania, przed START oraz po potwierdzeniu pobierania demo powstają krótkie pliki w `Pobrane/RetailSetup`. To **wyłącznie** wersje/status dozwolonych aplikacji i metadane sesji — bez QR, haseł, danych sklepu i pełnych logów.
+- Dodano przycisk ręcznego zapisu oraz informację o ostatnim pliku w panelu serwisowym.
+- Pliki w Pobranych mogą być niedostępne po zmianie użytkownika lub usunięte przez politykę retail/factory reset; jest to kopia pomocnicza, nie gwarantowany trwały rejestr.
+- Nowe: `AuditSnapshotStore`, poprawiony `GooglePlayVersionAudit.report`.
+
 ## 2026-11-10 — Retail Setup 0.11.18: pasywna kontrola wersji Google Play
 
 - Zachowujemy działającą instalację Retail Mode, wybór Experience, rejestrację i wykrywanie rozpoczęcia demo.
